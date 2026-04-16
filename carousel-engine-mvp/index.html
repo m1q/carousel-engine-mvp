@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Carousel Blocks Engine</title>
+  <title>Carousel Strategy Engine v3</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -14,18 +14,20 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <div>
-          <p class="eyebrow">Carousel Builder</p>
-          <h1>محرك الشرائح بالبلوكات</h1>
+          <p class="eyebrow">Strategy-first Carousel Builder</p>
+          <h1>محرك كاروسيل أذكى</h1>
         </div>
-        <p class="subtle">نسخة بدون API — خذ JSON من ChatGPT أو اكتب المحتوى يدويًا وعدّل بسرعة.</p>
+        <p class="subtle">أفضل مسار الآن: بدون API، لكن مع Flow Templates و Brand Presets و Insights و Prompt Builder جاهز لـ ChatGPT.</p>
       </div>
 
       <div class="tabs">
         <button class="tab-btn active" data-tab="project">المشروع</button>
+        <button class="tab-btn" data-tab="flows">Flows</button>
         <button class="tab-btn" data-tab="slides">الشرائح</button>
         <button class="tab-btn" data-tab="blocks">البلوكات</button>
         <button class="tab-btn" data-tab="json">JSON</button>
         <button class="tab-btn" data-tab="prompts">Prompts</button>
+        <button class="tab-btn" data-tab="insights">Insights</button>
       </div>
 
       <div class="tab-panels">
@@ -56,6 +58,21 @@
                 <option value="dark">غامق</option>
               </select>
             </label>
+            <label class="checkbox-row">
+              <input id="safeAreaToggle" type="checkbox" />
+              <span>إظهار Safe Area داخل المعاينة</span>
+            </label>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-heading-row">
+              <h2>Brand Presets</h2>
+              <button id="applyBrandPresetBtn" class="primary">تطبيق</button>
+            </div>
+            <label>اختر preset جاهز
+              <select id="brandPresetSelect"></select>
+            </label>
+            <p class="hint">هذه أسرع طريقة لتبديل طابع المشروع: Tech / Premium / Educational / Bold.</p>
           </div>
 
           <div class="panel-card">
@@ -68,18 +85,43 @@
               <button id="downloadJsonBtn">تحميل JSON</button>
               <button id="loadCurrentJsonBtn">إظهار JSON الحالي</button>
             </div>
-            <p class="hint">الحفظ المحلي يستخدم localStorage في المتصفح، والتصدير الحالي بصيغة JSON فقط.</p>
+            <p class="hint">النسخة الحالية تحفظ محليًا وتصدّر JSON. تم اختيار هذا المسار لأنه الأنسب لك الآن مع ChatGPT اليدوي.</p>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-flows">
+          <div class="panel-card">
+            <h2>Flow Context</h2>
+            <label>الموضوع
+              <input id="flowTopic" type="text" placeholder="مثال: ليش إعلانك ما يبيع؟" />
+            </label>
+            <label>الجمهور
+              <input id="flowAudience" type="text" placeholder="مثال: أصحاب البراندات الصغيرة" />
+            </label>
+            <label>الهدف
+              <input id="flowGoal" type="text" placeholder="مثال: شرح المشكلة ثم CTA" />
+            </label>
+            <label>العرض / الرسالة النهائية
+              <input id="flowOffer" type="text" placeholder="مثال: دزلنا رسالة ونبني لك الهيكل" />
+            </label>
+            <label>النبرة
+              <select id="flowTone">
+                <option value="iraqi">iraqi</option>
+                <option value="sales">sales</option>
+                <option value="friendly">friendly</option>
+                <option value="premium">premium</option>
+                <option value="educational">educational</option>
+              </select>
+            </label>
           </div>
 
           <div class="panel-card">
-            <h2>طريقة العمل مع ChatGPT</h2>
-            <ol class="hint-list">
-              <li>اذهب إلى تبويب <strong>Prompts</strong>.</li>
-              <li>اكتب الموضوع والهدف والجمهور وعدد الشرائح.</li>
-              <li>انسخ الـ prompt الجاهز إلى ChatGPT.</li>
-              <li>الصق JSON الناتج في تبويب <strong>JSON</strong>.</li>
-              <li>اضغط <strong>استيراد JSON</strong> وعدّل يدويًا.</li>
-            </ol>
+            <div class="panel-heading-row">
+              <h2>Flow Templates</h2>
+              <button id="replaceWithTemplateBtn" class="primary">تطبيق الـ Flow المحدد</button>
+            </div>
+            <div id="flowCards" class="flow-cards"></div>
+            <p class="hint">اختر الـ Flow المناسب، ثم طبّقه. هذا أسرع من بناء الشرائح من الصفر.</p>
           </div>
         </section>
 
@@ -188,13 +230,13 @@
               <button id="importJsonBtn" class="primary">استيراد JSON</button>
               <button id="copyJsonBtn">نسخ JSON</button>
             </div>
-            <p class="hint">الاستيراد يقبل الآن 3 صيغ: مشروع كامل، أو { slides: [...] }، أو { blocks: [...] } لتكوين شريحة واحدة تلقائيًا.</p>
+            <p class="hint">الاستيراد صار أذكى: يدعم project كامل أو slides أو blocks، ويحاول استخراج JSON حتى لو كان داخل ```json.</p>
           </div>
         </section>
 
         <section class="tab-panel" id="tab-prompts">
           <div class="panel-card">
-            <h2>مولّد Prompts لـ ChatGPT</h2>
+            <h2>Prompt Builder أذكى</h2>
             <label>الموضوع
               <input id="promptTopic" type="text" placeholder="مثال: ليش إعلانك ما يبيع؟" />
             </label>
@@ -203,6 +245,17 @@
             </label>
             <label>الجمهور
               <input id="promptAudience" type="text" placeholder="مثال: أصحاب المشاريع الصغيرة" />
+            </label>
+            <label>نوع المنشور
+              <select id="promptPostType">
+                <option value="sales">sales</option>
+                <option value="educational">educational</option>
+                <option value="branding">branding</option>
+                <option value="objections">objections</option>
+              </select>
+            </label>
+            <label>السرد
+              <select id="promptNarrative"></select>
             </label>
             <label>النبرة
               <select id="promptTone">
@@ -217,8 +270,8 @@
               <input id="promptSlides" type="number" min="1" max="12" value="5" />
             </label>
             <div class="button-grid two">
-              <button id="buildProjectPromptBtn" class="primary">بناء Prompt لمشروع كامل</button>
-              <button id="buildBlocksPromptBtn">بناء Prompt لبلوكات فقط</button>
+              <button id="buildProjectPromptBtn" class="primary">Prompt لمشروع كامل</button>
+              <button id="buildBlocksPromptBtn">Prompt لبلوكات فقط</button>
               <button id="copyPromptBtn">نسخ Prompt</button>
               <button id="sendPromptToJsonBtn">إرسال للـ JSON</button>
             </div>
@@ -227,7 +280,22 @@
           <div class="panel-card">
             <h2>الناتج</h2>
             <textarea id="promptOutput" class="json-editor" spellcheck="false"></textarea>
-            <p class="hint">هذا فقط prompt نصي ترسله إلى ChatGPT، وليس استدعاء API.</p>
+            <p class="hint">هذا tab يختار المسار الأنسب لك الآن: بناء Prompt صارم ترسله إلى ChatGPT، ثم ترجع تستورد الناتج هنا.</p>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-insights">
+          <div class="panel-card">
+            <h2>ملخص الجودة</h2>
+            <div id="insightSummary" class="insight-summary"></div>
+          </div>
+          <div class="panel-card">
+            <h2>ملاحظات استراتيجية</h2>
+            <div id="insightList" class="insight-list"></div>
+          </div>
+          <div class="panel-card">
+            <h2>تفاصيل كل شريحة</h2>
+            <div id="slideHealthList" class="slide-health-list"></div>
           </div>
         </section>
       </div>
@@ -240,6 +308,10 @@
           <span class="subtle" id="workspaceMeta">0 شرائح</span>
         </div>
         <div class="toolbar-actions">
+          <label class="checkbox-row compact">
+            <input id="toolbarSafeAreaToggle" type="checkbox" />
+            <span>Safe Area</span>
+          </label>
           <span class="autosave-state" id="autosaveState">Autosaved</span>
           <button id="zoomOutBtn">-</button>
           <span id="zoomLabel">45%</span>

@@ -1,35 +1,35 @@
 {
-  "name": "Marketing Carousel Example",
-  "description": "مثال جاهز للاستيراد داخل المحرك",
+  "name": "محتوى تجريبي لمسار Before/After",
+  "description": "مثال جاهز للاستيراد في v3",
   "language": "ar",
   "dialect": "iraqi",
   "brand": {
-    "brandName": "FrameX",
-    "handle": "@framex",
-    "labelText": "رؤية FrameX",
-    "footerText": "@framex"
+    "brandName": "Watt",
+    "handle": "@watt",
+    "labelText": "حلول أوضح",
+    "footerText": "@watt"
   },
   "theme": {
-    "preset": "framex-default",
-    "defaultMode": "light",
-    "accent": "#ff6b4a"
+    "preset": "tech",
+    "defaultMode": "dark",
+    "accent": "#2f80ed",
+    "showSafeArea": true
   },
   "slides": [
     {
       "role": "cover",
       "layoutFamily": "dark",
       "background": {
-        "mode": "image",
-        "imageUrl": "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=1400&auto=format&fit=crop"
+        "mode": "dark"
       },
       "blocks": [
         {
           "type": "hero",
           "content": {
-            "eyebrow": "مو لازم تبني كل شريحة من الصفر",
-            "title": "حوّل فكرتك",
-            "highlightedText": "إلى بلوكات مرتبة",
-            "subtitle": "خذ المحتوى من ChatGPT والصقه هنا كـ JSON بدل إعادة كتابة كل شيء يدويًا."
+            "eyebrow": "قبل / بعد",
+            "title": "ليش المحتوى عندك ما يقنع؟",
+            "highlightedText": "لأن الهيكل مشتت",
+            "subtitle": "هذا المثال يبين كيف تغيّر الفكرة نفسها لما ترتبها داخل flow أوضح."
           }
         }
       ]
@@ -37,40 +37,52 @@
     {
       "role": "problem",
       "layoutFamily": "card",
-      "background": { "mode": "light" },
+      "background": {
+        "mode": "light"
+      },
       "blocks": [
-        {
-          "type": "text",
-          "content": {
-            "title": "ليش هذا مهم؟",
-            "paragraph": "لأنك تحتاج سرعة في كتابة المحتوى مع بقاء التصميم ثابت ونظيف وقابل للتعديل."
-          }
-        },
         {
           "type": "checklist",
           "content": {
-            "title": "الفوائد",
+            "title": "قبل",
             "items": [
-              { "text": "توفير وقت" },
-              { "text": "سهولة إعادة الاستخدام" },
-              { "text": "تحكم أفضل بالمحتوى" }
+              {
+                "text": "عنوان أول ضعيف"
+              },
+              {
+                "text": "رسالة غير واضحة"
+              },
+              {
+                "text": "ماكو CTA حاسم"
+              }
             ]
           }
         }
       ]
     },
     {
-      "role": "cta",
+      "role": "solution",
       "layoutFamily": "premium",
-      "background": { "mode": "dark" },
+      "background": {
+        "mode": "dark"
+      },
       "blocks": [
+        {
+          "type": "stat",
+          "content": {
+            "title": "بعد",
+            "value": "4",
+            "label": "شرائح كافية غالبًا",
+            "supportingText": "Hook + Problem + Solution + CTA"
+          }
+        },
         {
           "type": "cta",
           "content": {
-            "title": "ابدأ من الآن",
-            "message": "انسخ هذا المثال أو عدّله وابدأ ببناء carousel جديد خلال دقائق.",
-            "buttonText": "ابدأ التحرير",
-            "subtext": "يمكنك إضافة أو حذف أو نسخ أي بلوك."
+            "title": "النتيجة",
+            "message": "بدل البداية من الصفر، اختر flow مناسب وعدّل الرسالة بسرعة.",
+            "buttonText": "جرّبها بنفسك",
+            "subtext": "استخدم تبويب Flows ثم عدّل النصوص."
           }
         }
       ]

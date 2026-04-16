@@ -1,9 +1,229 @@
-const STORAGE_KEY = 'carousel-blocks-engine-project-v2';
+const STORAGE_KEY = 'carousel-blocks-engine-project-v3';
+
+const BRAND_PRESETS = {
+  framex: {
+    label: 'FrameX Default',
+    accent: '#ff6b4a',
+    defaultMode: 'light',
+    brandLabel: 'رؤية FrameX',
+    handle: '@framex'
+  },
+  tech: {
+    label: 'Tech',
+    accent: '#2f80ed',
+    defaultMode: 'dark',
+    brandLabel: 'Tech Vision',
+    handle: '@techbrand'
+  },
+  premium: {
+    label: 'Premium',
+    accent: '#c9a227',
+    defaultMode: 'dark',
+    brandLabel: 'Premium Studio',
+    handle: '@premiumbrand'
+  },
+  educational: {
+    label: 'Educational',
+    accent: '#27ae60',
+    defaultMode: 'light',
+    brandLabel: 'شرح واضح',
+    handle: '@edubrand'
+  },
+  bold: {
+    label: 'Bold Arabic',
+    accent: '#ef4444',
+    defaultMode: 'dark',
+    brandLabel: 'رسالة مباشرة',
+    handle: '@boldbrand'
+  }
+};
+
+const FLOW_TEMPLATES = {
+  hook_problem_solution_cta: {
+    title: 'Hook → Problem → Solution → CTA',
+    tag: 'أفضل مسار عام',
+    description: 'الأنسب للمحتوى البيعي أو التوعوي السريع. يبدأ بخطاف ثم المشكلة ثم الحل ثم إغلاق واضح.',
+    create: (ctx) => [
+      {
+        role: 'cover', layoutFamily: 'dark', background: { mode: 'dark' }, blocks: [
+          { type: 'hero', content: { eyebrow: 'ليش هذا الموضوع مهم؟', title: shortText(ctx.topic || 'عنوان رئيسي قوي', 38), highlightedText: shortText(ctx.goal || 'النتيجة التي تريدها', 30), subtitle: `للـ ${ctx.audience || 'الجمهور المناسب'} — سنبني لك flow واضح بدل شرائح عشوائية.` } }
+        ]
+      },
+      {
+        role: 'problem', layoutFamily: 'card', background: { mode: 'light' }, blocks: [
+          { type: 'text', content: { title: 'وين المشكلة؟', paragraph: `المشكلة ليست فقط في الوصول، بل في طريقة عرض ${ctx.topic || 'الفكرة'}، وترتيب الرسالة، وتوقيت الـ CTA.` } },
+          { type: 'checklist', content: { title: 'ثلاث نقاط تؤذي الأداء', items: [
+            { text: 'بداية ضعيفة لا تشد الانتباه' },
+            { text: 'عرض غير واضح أو بلا فائدة مباشرة' },
+            { text: 'إنهاء بدون إجراء واضح' }
+          ] } }
+        ]
+      },
+      {
+        role: 'solution', layoutFamily: 'premium', background: { mode: 'dark' }, blocks: [
+          { type: 'stat', content: { title: 'الحل العملي', value: '4', label: 'شرائح مركزة تكفي غالبًا', supportingText: 'خطاف + مشكلة + حل + CTA أقوى من 9 شرائح مكررة.' } },
+          { type: 'text', content: { title: 'ماذا نفعل هنا؟', paragraph: `نحوّل ${ctx.topic || 'الفكرة'} إلى وحدات واضحة: رسالة، دليل، ثم خطوة نهائية بسيطة.` } }
+        ]
+      },
+      {
+        role: 'cta', layoutFamily: 'centered', background: { mode: 'light' }, blocks: [
+          { type: 'cta', content: { title: 'الخطوة القادمة', message: ctx.offer || 'جهّز الفكرة، وابنِ carousel أنظف وأسرع.', buttonText: 'ابدأ الآن', subtext: `النبرة المختارة: ${ctx.tone}` } }
+        ]
+      }
+    ]
+  },
+  mistakes_fixes_cta: {
+    title: 'Mistakes → Fixes → CTA',
+    tag: 'للشرح والتعليم',
+    description: 'ممتاز عندما تريد تعليم الجمهور عبر أخطاء شائعة ثم تصحيحها.',
+    create: (ctx) => [
+      {
+        role: 'cover', layoutFamily: 'dark', background: { mode: 'image', imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1200&auto=format&fit=crop' }, blocks: [
+          { type: 'hero', content: { eyebrow: 'أكثر الأخطاء تكرارًا', title: `أخطاء في ${shortText(ctx.topic || 'موضوعك', 26)}`, highlightedText: 'تمنع النتيجة', subtitle: `محتوى مناسب لـ ${ctx.audience || 'الناس المهتمين'} مع تصحيحات واضحة.` } }
+        ]
+      },
+      {
+        role: 'problem', layoutFamily: 'card', background: { mode: 'light' }, blocks: [
+          { type: 'checklist', content: { title: 'الأخطاء', items: [
+            { text: 'خطاف أول ضعيف' },
+            { text: 'شرح طويل في شريحة واحدة' },
+            { text: 'إنهاء بلا CTA مباشر' }
+          ] } }
+        ]
+      },
+      {
+        role: 'solution', layoutFamily: 'stack', background: { mode: 'light' }, blocks: [
+          { type: 'text', content: { title: 'كيف نصلحها؟', paragraph: `اجعل الرسالة حول ${ctx.topic || 'الفكرة'} أقصر، وأضف قيمة سريعة، وانقل القارئ خطوة بخطوة.` } },
+          { type: 'checklist', content: { title: 'التصحيحات', items: [
+            { text: 'شريحة أولى أقوى' },
+            { text: 'تقسيم الشرح إلى وحدات' },
+            { text: 'CTA واضح ومحدد' }
+          ] } }
+        ]
+      },
+      {
+        role: 'proof', layoutFamily: 'premium', background: { mode: 'dark' }, blocks: [
+          { type: 'stat', content: { title: 'النتيجة المتوقعة', value: '↑', label: 'وضوح أعلى واحتكاك أقل', supportingText: 'حتى لو بقي نفس الموضوع، فالهيكل الأفضل يرفع الجودة.' } }
+        ]
+      },
+      {
+        role: 'cta', layoutFamily: 'centered', background: { mode: 'light' }, blocks: [
+          { type: 'cta', content: { title: 'حوّلها إلى نسخة أفضل', message: ctx.offer || 'ابدأ بنسخة جديدة، أو اطلب من ChatGPT JSON مرتب.', buttonText: 'ابنِ نسخة محسنة', subtext: ctx.goal || 'هدف المنشور' } }
+        ]
+      }
+    ]
+  },
+  before_after_offer: {
+    title: 'Before → After → Offer',
+    tag: 'للخدمات والتحويل',
+    description: 'مناسب عندما تريد عرض الفرق قبل وبعد استخدام خدمتك أو طريقتك.',
+    create: (ctx) => [
+      {
+        role: 'cover', layoutFamily: 'premium', background: { mode: 'dark' }, blocks: [
+          { type: 'hero', content: { eyebrow: 'قبل / بعد', title: shortText(ctx.topic || 'الفكرة الحالية', 34), highlightedText: 'لكن بشكل أوضح', subtitle: `اعرض التحول الذي يريده ${ctx.audience || 'الجمهور'}.` } }
+        ]
+      },
+      {
+        role: 'problem', layoutFamily: 'card', background: { mode: 'light' }, blocks: [
+          { type: 'text', content: { title: 'قبل', paragraph: `الوضع الحالي: رسائل متفرقة، عناوين ضعيفة، أو عرض ${ctx.topic || 'الفكرة'} بطريقة مربكة.` } }
+        ]
+      },
+      {
+        role: 'solution', layoutFamily: 'card', background: { mode: 'light' }, blocks: [
+          { type: 'text', content: { title: 'بعد', paragraph: `هيكل أنظف، قيمة أوضح، وتسلسل يوصّل الرسالة إلى ${ctx.audience || 'الشخص المناسب'} بطريقة أقوى.` } },
+          { type: 'image-text', content: { imageUrl: 'https://images.unsplash.com/photo-1496171367470-9ed9a91ea931?q=80&w=1200&auto=format&fit=crop', title: 'شكل أفضل', paragraph: 'نفس الفكرة، لكن بإخراج أقوى وتنظيم أوضح.', caption: 'استفد من البلوكات بدل بناء كل شريحة من الصفر.' } }
+        ]
+      },
+      {
+        role: 'proof', layoutFamily: 'dark', background: { mode: 'dark' }, blocks: [
+          { type: 'stat', content: { title: 'الفارق', value: '2x', label: 'وضوح وتسلسل أقوى', supportingText: 'ليس رقمًا علميًا، بل تذكير أن البنية الجيدة تغيّر الإحساس بالكامل.' } }
+        ]
+      },
+      {
+        role: 'cta', layoutFamily: 'centered', background: { mode: 'light' }, blocks: [
+          { type: 'cta', content: { title: 'خذ النسخة الأفضل', message: ctx.offer || 'ابدأ بـ flow جاهز ثم عدّل التفاصيل بدل البداية من صفحة فارغة.', buttonText: 'طبّق هذا المسار', subtext: ctx.goal || 'الهدف' } }
+        ]
+      }
+    ]
+  },
+  educational_steps: {
+    title: 'Educational Steps',
+    tag: 'للشرح خطوة بخطوة',
+    description: 'أفضل مسار للمحتوى التعليمي: تعريف سريع ثم خطوات ثم ملخص.',
+    create: (ctx) => [
+      {
+        role: 'cover', layoutFamily: 'dark', background: { mode: 'dark' }, blocks: [
+          { type: 'hero', content: { eyebrow: 'شرح عملي', title: shortText(ctx.topic || 'الموضوع', 34), highlightedText: 'بخطوات واضحة', subtitle: `موجّه إلى ${ctx.audience || 'المتعلمين'} مع تقسيم بسيط.` } }
+        ]
+      },
+      {
+        role: 'intro', layoutFamily: 'card', background: { mode: 'light' }, blocks: [
+          { type: 'text', content: { title: 'الفكرة الأساسية', paragraph: `قبل التفاصيل، يجب أن يفهم القارئ لماذا ${ctx.topic || 'هذا الموضوع'} مهم وما النتيجة التي سيأخذها.` } }
+        ]
+      },
+      {
+        role: 'solution', layoutFamily: 'stack', background: { mode: 'light' }, blocks: [
+          { type: 'checklist', content: { title: 'الخطوات', items: [
+            { text: 'ابدأ من الفكرة الرئيسية' },
+            { text: 'قسّم المحتوى إلى بلوكات قصيرة' },
+            { text: 'اختم بخلاصة أو CTA' }
+          ] } }
+        ]
+      },
+      {
+        role: 'summary', layoutFamily: 'card', background: { mode: 'light' }, blocks: [
+          { type: 'stat', content: { title: 'الخلاصة', value: '3', label: 'خطوات تكفي غالبًا', supportingText: 'وضوح الفكرة أهم من كثرة الشرائح.' } }
+        ]
+      },
+      {
+        role: 'cta', layoutFamily: 'centered', background: { mode: 'light' }, blocks: [
+          { type: 'cta', content: { title: 'طبقها الآن', message: ctx.offer || 'ابنِ نسختك التعليمية بسرعة ثم حسّنها يدويًا.', buttonText: 'ابدأ بالتطبيق', subtext: ctx.goal || 'الهدف' } }
+        ]
+      }
+    ]
+  },
+  objections_close: {
+    title: 'Objections → Answers → Close',
+    tag: 'للبيع والخدمات',
+    description: 'لما يكون جمهورك مترددًا وتحتاج ترد على اعتراضات شائعة قبل الإغلاق.',
+    create: (ctx) => [
+      {
+        role: 'cover', layoutFamily: 'dark', background: { mode: 'dark' }, blocks: [
+          { type: 'hero', content: { eyebrow: 'اعتراضات شائعة', title: shortText(ctx.topic || 'هل هذا مناسب؟', 34), highlightedText: 'خل نجاوب بوضوح', subtitle: `مفيد مع ${ctx.audience || 'جمهور متردد'} قبل تقديم العرض.` } }
+        ]
+      },
+      {
+        role: 'problem', layoutFamily: 'card', background: { mode: 'light' }, blocks: [
+          { type: 'checklist', content: { title: 'الاعتراضات', items: [
+            { text: 'هل الموضوع يستحق؟' },
+            { text: 'هل التنفيذ معقد؟' },
+            { text: 'هل سأحتاج وقتًا طويلًا؟' }
+          ] } }
+        ]
+      },
+      {
+        role: 'solution', layoutFamily: 'card', background: { mode: 'light' }, blocks: [
+          { type: 'text', content: { title: 'الرد المختصر', paragraph: `ابدأ بهيكل بسيط، ركّز على ${ctx.topic || 'الرسالة'}، وخلّ ChatGPT يزوّدك بالـ JSON، ثم عدّل يدويًا داخل المشروع.` } }
+        ]
+      },
+      {
+        role: 'proof', layoutFamily: 'premium', background: { mode: 'dark' }, blocks: [
+          { type: 'stat', content: { title: 'لماذا هذا مناسب؟', value: 'MVP', label: 'مسار خفيف لكنه عملي', supportingText: 'أقل تعقيد، أسرع تجربة، وقابل للتطوير لاحقًا.' } }
+        ]
+      },
+      {
+        role: 'cta', layoutFamily: 'centered', background: { mode: 'light' }, blocks: [
+          { type: 'cta', content: { title: 'جاهز تبدأ؟', message: ctx.offer || 'اختر Flow مناسب ثم عدّل الرسالة لتناسب البراند.', buttonText: 'طبّق هذا الـ Flow', subtext: `الجمهور: ${ctx.audience || 'عام'}` } }
+        ]
+      }
+    ]
+  }
+};
 
 const demoProject = {
   id: uid(),
-  name: 'FrameX Sales Carousel',
-  description: 'نسخة MVP بنظام بلوكات',
+  name: 'FrameX Strategy Carousel',
+  description: 'نسخة v3: Flow Templates + Brand Presets + Insights + Prompt Builder',
   language: 'ar',
   dialect: 'iraqi',
   canvas: { width: 1080, height: 1350, ratio: '4:5' },
@@ -11,96 +231,25 @@ const demoProject = {
     brandName: 'FrameX',
     handle: '@framex',
     labelText: 'رؤية FrameX',
-    footerText: '@framex',
+    footerText: '@framex'
   },
   theme: {
-    preset: 'framex-default',
+    preset: 'framex',
     defaultMode: 'light',
     accent: '#ff6b4a',
+    showSafeArea: false
   },
-  slides: [
-    {
-      id: uid(),
-      role: 'cover',
-      layoutFamily: 'dark',
-      background: {
-        mode: 'image',
-        imageUrl: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=1400&auto=format&fit=crop'
-      },
-      blocks: [
-        {
-          id: uid(),
-          type: 'hero',
-          content: {
-            eyebrow: 'المشكلة مو بزر التمويل',
-            title: 'مموّل إعلانك',
-            highlightedText: 'بس ماكو مبيعات؟',
-            subtitle: 'حوّل فكرتك إلى بلوكات واضحة وخذ المحتوى من ChatGPT كـ JSON بدل كتابة شريحة كاملة من الصفر.'
-          }
-        }
-      ]
-    },
-    {
-      id: uid(),
-      role: 'problem',
-      layoutFamily: 'card',
-      background: { mode: 'light' },
-      blocks: [
-        {
-          id: uid(),
-          type: 'text',
-          content: {
-            title: 'وين المشكلة الحقيقية؟',
-            paragraph: 'أحيانًا الإعلان يوصل، لكن المحتوى نفسه ما يقنع. لذلك بدال ما تبني كل شريحة يدويًا، استخدم بلوكات واضحة ومتكررة وسهلة التحرير.'
-          }
-        },
-        {
-          id: uid(),
-          type: 'checklist',
-          content: {
-            title: 'أخطاء متكررة',
-            items: [
-              { text: 'نص طويل داخل شريحة وحدة' },
-              { text: 'ماكو تدرج منطقي بين الشرائح' },
-              { text: 'الـ CTA ضعيف أو متأخر' }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      id: uid(),
-      role: 'solution',
-      layoutFamily: 'premium',
-      background: { mode: 'dark' },
-      blocks: [
-        {
-          id: uid(),
-          type: 'stat',
-          content: {
-            title: 'الفكرة الصح',
-            value: '6',
-            label: 'أنواع بلوكات كافية للنسخة الأولى',
-            supportingText: 'Hero + Text + Checklist + Stat + ImageText + CTA'
-          }
-        },
-        {
-          id: uid(),
-          type: 'cta',
-          content: {
-            title: 'شغلك يصير أسرع',
-            message: 'ولّد المحتوى من ChatGPT كـ JSON، وبعدها عدّل عليه هنا بسرعة.',
-            buttonText: 'جرّب الاستيراد الآن',
-            subtext: 'استخدم تبويب Prompts كنقطة بداية.'
-          }
-        }
-      ]
-    }
-  ],
+  slides: FLOW_TEMPLATES.hook_problem_solution_cta.create({
+    topic: 'ليش الكاروسيل عندك ما يوصل الفكرة؟',
+    goal: 'هيكل أوضح + CTA أقوى',
+    audience: 'أصحاب المشاريع الصغيرة',
+    offer: 'خلّ ChatGPT يعطيك JSON، وبعدين حسّن النتيجة هنا.',
+    tone: 'iraqi'
+  }).map(ensureIds),
   meta: {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    version: '2.0.0',
+    version: '3.0.0',
     source: 'manual'
   }
 };
@@ -109,8 +258,8 @@ const state = {
   project: loadProject(),
   selectedSlideId: null,
   selectedBlockId: null,
+  selectedFlowKey: 'hook_problem_solution_cta',
   zoom: 45,
-  promptMode: 'project',
   autosaveState: 'Autosaved'
 };
 
@@ -126,6 +275,10 @@ const refs = {
   autosaveState: document.getElementById('autosaveState'),
   promptOutput: document.getElementById('promptOutput'),
   toast: document.getElementById('toast'),
+  flowCards: document.getElementById('flowCards'),
+  insightSummary: document.getElementById('insightSummary'),
+  insightList: document.getElementById('insightList'),
+  slideHealthList: document.getElementById('slideHealthList')
 };
 
 bootstrap();
@@ -135,23 +288,37 @@ function bootstrap() {
   state.selectedSlideId = state.project.slides[0]?.id || null;
   state.selectedBlockId = getSelectedSlide()?.blocks[0]?.id || null;
 
+  hydratePresetOptions();
+  hydrateNarrativeOptions();
   bindTabs();
   bindProjectInputs();
   bindSlideInputs();
   bindBlockEditor();
   bindButtons();
   bindPromptBuilder();
+  bindFlowInputs();
   render();
+}
+
+function hydratePresetOptions() {
+  const select = document.getElementById('brandPresetSelect');
+  select.innerHTML = Object.entries(BRAND_PRESETS)
+    .map(([key, preset]) => `<option value="${key}">${preset.label}</option>`)
+    .join('');
+  setFieldValue('brandPresetSelect', state.project.theme.preset || 'framex');
+}
+
+function hydrateNarrativeOptions() {
+  const select = document.getElementById('promptNarrative');
+  select.innerHTML = Object.entries(FLOW_TEMPLATES)
+    .map(([key, flow]) => `<option value="${key}">${flow.title}</option>`)
+    .join('');
+  setFieldValue('promptNarrative', state.selectedFlowKey);
 }
 
 function bindTabs() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-    });
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
   });
 }
 
@@ -166,6 +333,22 @@ function bindProjectInputs() {
   bindInput('brandLabel', value => state.project.brand.labelText = value);
   bindInput('accentColor', value => state.project.theme.accent = value);
   bindChange('themeMode', value => state.project.theme.defaultMode = value);
+  document.getElementById('safeAreaToggle').addEventListener('change', e => {
+    state.project.theme.showSafeArea = e.target.checked;
+    document.getElementById('toolbarSafeAreaToggle').checked = e.target.checked;
+    touch();
+  });
+  document.getElementById('toolbarSafeAreaToggle').addEventListener('change', e => {
+    state.project.theme.showSafeArea = e.target.checked;
+    document.getElementById('safeAreaToggle').checked = e.target.checked;
+    touch();
+  });
+}
+
+function bindFlowInputs() {
+  ['flowTopic', 'flowAudience', 'flowGoal', 'flowOffer', 'flowTone'].forEach(id => {
+    document.getElementById(id).addEventListener(id === 'flowTone' ? 'change' : 'input', () => renderFlowCards());
+  });
 }
 
 function bindSlideInputs() {
@@ -209,15 +392,15 @@ function bindButtons() {
   });
   document.getElementById('zoomInBtn').addEventListener('click', () => setZoom(state.zoom + 5));
   document.getElementById('zoomOutBtn').addEventListener('click', () => setZoom(state.zoom - 5));
+  document.getElementById('applyBrandPresetBtn').addEventListener('click', applyBrandPresetFromSelect);
+  document.getElementById('replaceWithTemplateBtn').addEventListener('click', applySelectedFlowTemplate);
 }
 
 function bindPromptBuilder() {
   document.getElementById('buildProjectPromptBtn').addEventListener('click', () => {
-    state.promptMode = 'project';
     refs.promptOutput.value = buildPrompt('project');
   });
   document.getElementById('buildBlocksPromptBtn').addEventListener('click', () => {
-    state.promptMode = 'blocks';
     refs.promptOutput.value = buildPrompt('blocks');
   });
   document.getElementById('copyPromptBtn').addEventListener('click', async () => {
@@ -348,6 +531,49 @@ function moveBlock(direction) {
   touch('تم تحريك البلوك.');
 }
 
+function applyBrandPresetFromSelect() {
+  const key = document.getElementById('brandPresetSelect').value;
+  applyBrandPreset(key);
+}
+
+function applyBrandPreset(key) {
+  const preset = BRAND_PRESETS[key];
+  if (!preset) return;
+  state.project.theme.preset = key;
+  state.project.theme.accent = preset.accent;
+  state.project.theme.defaultMode = preset.defaultMode;
+  if (!state.project.brand.handle || state.project.brand.handle === '@brand' || state.project.brand.handle === '@mybrand') {
+    state.project.brand.handle = preset.handle;
+    state.project.brand.footerText = preset.handle;
+  }
+  if (!state.project.brand.labelText || state.project.brand.labelText === 'رؤية البراند') {
+    state.project.brand.labelText = preset.brandLabel;
+  }
+  touch(`تم تطبيق preset: ${preset.label}`);
+}
+
+function applySelectedFlowTemplate() {
+  const slides = FLOW_TEMPLATES[state.selectedFlowKey].create(getFlowContext()).map(ensureIds);
+  if (!slides.length) return;
+  state.project.slides = slides;
+  state.selectedSlideId = slides[0].id;
+  state.selectedBlockId = slides[0].blocks[0]?.id || null;
+  if (!state.project.name || state.project.name === 'New Carousel Project' || state.project.name === 'FrameX Strategy Carousel') {
+    state.project.name = shortText(getFlowContext().topic || FLOW_TEMPLATES[state.selectedFlowKey].title, 46);
+  }
+  touch(`تم تطبيق Flow: ${FLOW_TEMPLATES[state.selectedFlowKey].title}`);
+}
+
+function getFlowContext() {
+  return {
+    topic: document.getElementById('flowTopic').value.trim() || state.project.name || 'موضوع بدون عنوان',
+    audience: document.getElementById('flowAudience').value.trim() || 'جمهور عام',
+    goal: document.getElementById('flowGoal').value.trim() || 'رسالة واضحة مع CTA',
+    offer: document.getElementById('flowOffer').value.trim() || 'ابدأ من Flow جاهز ثم حسّن المحتوى.',
+    tone: document.getElementById('flowTone').value || 'iraqi'
+  };
+}
+
 function render() {
   document.documentElement.style.setProperty('--accent', state.project.theme.accent || '#ff6b4a');
   document.documentElement.style.setProperty('--preview-scale', `${state.zoom / 100}`);
@@ -358,10 +584,14 @@ function render() {
 
   syncProjectInputs();
   syncSlideInputs();
+  syncFlowInputs();
+  syncPromptInputs();
+  renderFlowCards();
   renderSlidesList();
   renderBlocksList();
   renderBlockEditor();
   renderPreview();
+  renderInsights();
 }
 
 function syncProjectInputs() {
@@ -372,6 +602,22 @@ function syncProjectInputs() {
   setFieldValue('brandLabel', state.project.brand.labelText || '');
   setFieldValue('accentColor', state.project.theme.accent || '#ff6b4a');
   setFieldValue('themeMode', state.project.theme.defaultMode || 'light');
+  setFieldValue('brandPresetSelect', state.project.theme.preset || 'framex');
+  document.getElementById('safeAreaToggle').checked = !!state.project.theme.showSafeArea;
+  document.getElementById('toolbarSafeAreaToggle').checked = !!state.project.theme.showSafeArea;
+}
+
+function syncFlowInputs() {
+  if (!document.getElementById('flowTopic').value) setFieldValue('flowTopic', state.project.name || '');
+  if (!document.getElementById('flowGoal').value) setFieldValue('flowGoal', state.project.description || 'رسالة واضحة + CTA');
+  setFieldValue('flowTone', document.getElementById('flowTone').value || 'iraqi');
+}
+
+function syncPromptInputs() {
+  if (!document.getElementById('promptTopic').value) setFieldValue('promptTopic', document.getElementById('flowTopic').value || state.project.name || '');
+  if (!document.getElementById('promptGoal').value) setFieldValue('promptGoal', document.getElementById('flowGoal').value || 'رسالة واضحة + CTA');
+  if (!document.getElementById('promptAudience').value) setFieldValue('promptAudience', document.getElementById('flowAudience').value || 'جمهور عام');
+  setFieldValue('promptNarrative', state.selectedFlowKey);
 }
 
 function syncSlideInputs() {
@@ -384,14 +630,36 @@ function syncSlideInputs() {
   setFieldValue('slideBgColor', slide.background?.customColor || '#f7f7f5');
 }
 
+function renderFlowCards() {
+  refs.flowCards.innerHTML = '';
+  Object.entries(FLOW_TEMPLATES).forEach(([key, flow]) => {
+    const card = document.createElement('button');
+    card.className = `flow-card ${key === state.selectedFlowKey ? 'active' : ''}`;
+    card.type = 'button';
+    card.innerHTML = `
+      <strong>${escapeHtml(flow.title)}</strong>
+      <p>${escapeHtml(flow.description)}</p>
+      <span class="mini-tag">${escapeHtml(flow.tag)}</span>
+    `;
+    card.addEventListener('click', () => {
+      state.selectedFlowKey = key;
+      setFieldValue('promptNarrative', key);
+      render();
+    });
+    refs.flowCards.appendChild(card);
+  });
+}
+
 function renderSlidesList() {
   refs.slidesList.innerHTML = '';
   const tpl = document.getElementById('slideListItemTemplate');
+  const slideHealth = analyzeSlides(state.project);
   state.project.slides.forEach((slide, index) => {
     const node = tpl.content.firstElementChild.cloneNode(true);
     node.querySelector('.badge').textContent = index + 1;
     node.querySelector('.title').textContent = `${slide.role} / ${slide.layoutFamily}`;
-    node.querySelector('.meta').textContent = `${slide.blocks.length} بلوك`;
+    const warnings = slideHealth[index]?.warnings || [];
+    node.querySelector('.meta').textContent = `${slide.blocks.length} بلوك${warnings.length ? ` • ${warnings.length} ملاحظات` : ''}`;
     if (slide.id === state.selectedSlideId) node.classList.add('active');
     node.addEventListener('click', () => selectSlide(slide.id));
     refs.slidesList.appendChild(node);
@@ -407,7 +675,8 @@ function renderBlocksList() {
     const node = tpl.content.firstElementChild.cloneNode(true);
     node.querySelector('.badge').textContent = index + 1;
     node.querySelector('.title').textContent = block.type;
-    node.querySelector('.meta').textContent = getBlockPreviewText(block);
+    const issues = getBlockIssues(block);
+    node.querySelector('.meta').textContent = `${getBlockPreviewText(block)}${issues.length ? ` • ${issues.length} ملاحظات` : ''}`;
     if (block.id === state.selectedBlockId) node.classList.add('active');
     node.addEventListener('click', () => {
       state.selectedBlockId = block.id;
@@ -460,6 +729,22 @@ function renderBlockEditor() {
     wrapper.appendChild(control);
     refs.blockEditorFields.appendChild(wrapper);
   });
+
+  const issues = getBlockIssues(block);
+  if (issues.length) {
+    const noteWrap = document.createElement('div');
+    noteWrap.style.marginTop = '8px';
+    noteWrap.style.display = 'flex';
+    noteWrap.style.flexWrap = 'wrap';
+    noteWrap.style.gap = '8px';
+    issues.forEach(text => {
+      const chip = document.createElement('div');
+      chip.className = 'warning-chip';
+      chip.textContent = text;
+      noteWrap.appendChild(chip);
+    });
+    refs.blockEditorFields.appendChild(noteWrap);
+  }
 }
 
 function renderPreview() {
@@ -479,6 +764,10 @@ function renderPreview() {
     if (slide.background?.mode === 'image' && slide.background?.imageUrl) {
       surface.style.backgroundImage = `url(${slide.background.imageUrl})`;
       surface.appendChild(el('div', 'slide-overlay'));
+    }
+
+    if (state.project.theme.showSafeArea) {
+      surface.appendChild(el('div', 'safe-area'));
     }
 
     const top = document.createElement('div');
@@ -620,6 +909,135 @@ function renderCtaBlock(block, slide) {
   return wrap;
 }
 
+function renderInsights() {
+  const summary = analyzeProject(state.project);
+  refs.insightSummary.innerHTML = '';
+  const summaryCards = [
+    { value: state.project.slides.length, label: 'عدد الشرائح' },
+    { value: summary.totalBlocks, label: 'عدد البلوكات' },
+    { value: summary.criticalCount, label: 'ملاحظات حرجة' },
+    { value: summary.warningCount, label: 'ملاحظات عادية' }
+  ];
+  summaryCards.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'summary-card';
+    card.innerHTML = `<strong>${escapeHtml(item.value)}</strong><span>${escapeHtml(item.label)}</span>`;
+    refs.insightSummary.appendChild(card);
+  });
+
+  refs.insightList.innerHTML = '';
+  summary.insights.forEach(item => {
+    const card = document.createElement('div');
+    card.className = `insight-item ${item.level}`;
+    card.innerHTML = `<strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.body)}</p>`;
+    refs.insightList.appendChild(card);
+  });
+  if (!summary.insights.length) {
+    refs.insightList.innerHTML = '<div class="insight-item good"><strong>الوضع جيد</strong><p>لا توجد ملاحظات حالية. يمكنك الآن تحسين النصوص أو تبديل الـ flow.</p></div>';
+  }
+
+  refs.slideHealthList.innerHTML = '';
+  summary.slideHealth.forEach((item, index) => {
+    const card = document.createElement('div');
+    card.className = 'slide-health-item';
+    const warnings = item.warnings.length ? `<ul>${item.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>` : '<p>لا توجد ملاحظات على هذه الشريحة.</p>';
+    card.innerHTML = `<strong>الشريحة ${index + 1} — ${escapeHtml(item.role)}</strong><p>${escapeHtml(item.summary)}</p>${warnings}`;
+    refs.slideHealthList.appendChild(card);
+  });
+}
+
+function analyzeProject(project) {
+  const insights = [];
+  const roles = project.slides.map(slide => slide.role);
+  const totalBlocks = project.slides.reduce((sum, slide) => sum + slide.blocks.length, 0);
+  const slideHealth = analyzeSlides(project);
+
+  const hasCover = roles.includes('cover');
+  const hasCta = roles.includes('cta') || project.slides.some(slide => slide.blocks.some(block => block.type === 'cta'));
+  const hasProof = roles.includes('proof') || project.slides.some(slide => slide.blocks.some(block => block.type === 'stat'));
+  const hasSolution = roles.includes('solution');
+
+  if (!hasCover) insights.push({ level: 'critical', title: 'ينقصك Hook واضح', body: 'لا توجد شريحة cover. غالبًا أول شريحة تحتاج خطاف أقوى ليبدأ السحب.' });
+  if (!hasSolution) insights.push({ level: 'warn', title: 'ينقصك حل واضح', body: 'المشروع يحتوي مشكلة أو شرح، لكنه لا يوضح أين الحل أو ماذا يجب أن يفعل القارئ.' });
+  if (!hasProof) insights.push({ level: 'warn', title: 'ينقصك Proof أو رقم', body: 'إضافة stat أو proof ترفع الإقناع حتى لو كان المحتوى قصيرًا.' });
+  if (!hasCta) insights.push({ level: 'critical', title: 'لا يوجد CTA فعلي', body: 'المشروع لا يحتوي دعوة نهائية واضحة للإجراء.' });
+  if (project.slides.length > 7) insights.push({ level: 'warn', title: 'عدد الشرائح مرتفع', body: 'الكاروسيل الطويل يحتاج إيقاعًا أقوى. تأكد أن كل شريحة تضيف شيئًا جديدًا.' });
+  if (project.slides.length < 3) insights.push({ level: 'warn', title: 'الهيكل قصير جدًا', body: 'قد تحتاج على الأقل Hook ثم قيمة/حل ثم CTA ليصبح التتابع أوضح.' });
+
+  const repeatedLayouts = project.slides.every(slide => slide.layoutFamily === project.slides[0]?.layoutFamily);
+  if (repeatedLayouts && project.slides.length >= 4) {
+    insights.push({ level: 'warn', title: 'الإيقاع البصري متكرر', body: 'كل الشرائح تقريبًا بنفس layout. جرّب تنويع بسيط بين dark/card/premium أو شريحة stat.' });
+  }
+
+  const blockWarnings = slideHealth.flatMap(slide => slide.warnings);
+  if (!blockWarnings.length) {
+    insights.push({ level: 'good', title: 'الهيكل متوازن مبدئيًا', body: 'لا توجد مشاكل كثافة واضحة الآن. ركّز على تحسين العناوين أو الـ CTA.' });
+  }
+
+  return {
+    totalBlocks,
+    criticalCount: insights.filter(i => i.level === 'critical').length,
+    warningCount: insights.filter(i => i.level === 'warn').length,
+    insights,
+    slideHealth
+  };
+}
+
+function analyzeSlides(project) {
+  return project.slides.map(slide => {
+    const warnings = [];
+    const totalChars = slide.blocks.reduce((sum, block) => sum + estimateBlockLength(block), 0);
+    if (totalChars > 420) warnings.push('الشريحة تبدو مزدحمة نصيًا.');
+    if (slide.blocks.length > 3) warnings.push('عدد البلوكات مرتفع داخل الشريحة.');
+    slide.blocks.forEach(block => warnings.push(...getBlockIssues(block)));
+    return {
+      role: slide.role,
+      summary: `layout: ${slide.layoutFamily} • blocks: ${slide.blocks.length} • density: ${densityLabel(totalChars)}`,
+      warnings: dedupe(warnings)
+    };
+  });
+}
+
+function getBlockIssues(block) {
+  const issues = [];
+  const c = block.content || {};
+  if (block.type === 'hero') {
+    if ((c.title || '').length > 42) issues.push('عنوان الـ hero طويل');
+    if ((c.subtitle || '').length > 170) issues.push('subtitle طويل نسبيًا');
+  }
+  if (block.type === 'text') {
+    if ((c.paragraph || '').length > 220) issues.push('الفقرة طويلة');
+  }
+  if (block.type === 'checklist') {
+    const items = c.items || [];
+    if (items.length > 5) issues.push('القائمة طويلة');
+    if (items.some(item => (typeof item === 'string' ? item : item.text).length > 75)) issues.push('بعض عناصر القائمة طويلة');
+  }
+  if (block.type === 'stat') {
+    if ((c.supportingText || '').length > 110) issues.push('النص المساعد طويل');
+  }
+  if (block.type === 'image-text') {
+    if (!c.imageUrl) issues.push('بلوك الصورة بلا صورة');
+    if ((c.paragraph || '').length > 180) issues.push('شرح الصورة طويل');
+  }
+  if (block.type === 'cta') {
+    if (!(c.buttonText || '').trim()) issues.push('CTA بلا زر');
+    if ((c.message || '').length > 160) issues.push('رسالة CTA طويلة');
+  }
+  return dedupe(issues);
+}
+
+function estimateBlockLength(block) {
+  const c = block.content || {};
+  return Object.values(c).flatMap(value => Array.isArray(value) ? value.map(item => typeof item === 'string' ? item : item.text) : [value]).join(' ').length;
+}
+
+function densityLabel(chars) {
+  if (chars > 420) return 'heavy';
+  if (chars > 230) return 'medium';
+  return 'light';
+}
+
 function getSurfaceModeClasses(slide) {
   const classes = [];
   if ((slide.background?.mode || state.project.theme.defaultMode) === 'dark' || slide.layoutFamily === 'dark' || slide.layoutFamily === 'premium') classes.push('dark');
@@ -698,7 +1116,7 @@ function getDefaultContentForType(type) {
 
 function getBlockPreviewText(block) {
   const c = block.content || {};
-  return c.title || c.message || c.label || c.paragraph || c.subtitle || 'بدون نص';
+  return shortText(c.title || c.message || c.label || c.paragraph || c.subtitle || 'بدون نص', 46);
 }
 
 function getSelectedSlide() {
@@ -769,7 +1187,7 @@ async function copyJson() {
 
 function importJson() {
   try {
-    const parsed = JSON.parse(refs.jsonEditor.value);
+    const parsed = parseLooseJson(refs.jsonEditor.value);
     const importedProject = parseImportedData(parsed);
     normalizeProject(importedProject);
     state.project = importedProject;
@@ -803,6 +1221,22 @@ function touch(message = 'Autosaved') {
   if (message && message !== 'Autosaved') showToast(message);
 }
 
+function parseLooseJson(text) {
+  const cleaned = String(text || '').trim();
+  if (!cleaned) throw new Error('الحقل فارغ.');
+  const withoutFences = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+  try {
+    return JSON.parse(withoutFences);
+  } catch {
+    const start = withoutFences.indexOf('{');
+    const end = withoutFences.lastIndexOf('}');
+    if (start !== -1 && end !== -1 && end > start) {
+      return JSON.parse(withoutFences.slice(start, end + 1));
+    }
+    throw new Error('تعذر استخراج JSON صالح من النص.');
+  }
+}
+
 function parseImportedData(parsed) {
   if (Array.isArray(parsed)) {
     return wrapSlidesAsProject(parsed);
@@ -833,9 +1267,9 @@ function wrapSlidesAsProject(slides) {
       labelText: 'Brand Vision',
       footerText: '@brand',
     },
-    theme: { preset: 'default', defaultMode: 'light', accent: '#ff6b4a' },
-    slides,
-    meta: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: '2.0.0', source: 'imported' }
+    theme: { preset: 'framex', defaultMode: 'light', accent: '#ff6b4a', showSafeArea: false },
+    slides: slides.map(ensureIds),
+    meta: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: '3.0.0', source: 'imported' }
   };
 }
 
@@ -864,11 +1298,12 @@ function normalizeProject(project) {
   project.brand.labelText ||= project.brand.brandName;
   project.brand.footerText ||= project.brand.handle;
   project.theme ||= {};
-  project.theme.preset ||= 'default';
+  project.theme.preset ||= 'framex';
   project.theme.defaultMode ||= 'light';
   project.theme.accent ||= '#ff6b4a';
+  project.theme.showSafeArea ||= false;
   project.meta ||= {};
-  project.meta.version ||= '2.0.0';
+  project.meta.version ||= '3.0.0';
   project.meta.source ||= 'manual';
   project.meta.createdAt ||= new Date().toISOString();
   project.meta.updatedAt ||= new Date().toISOString();
@@ -876,31 +1311,32 @@ function normalizeProject(project) {
 
   if (!project.slides.length) project.slides.push(createDefaultSlide(project.theme.defaultMode));
 
-  project.slides = project.slides.map(slide => {
-    slide.id ||= uid();
-    slide.role ||= 'custom';
-    slide.layoutFamily ||= 'card';
-    slide.background ||= { mode: project.theme.defaultMode };
-    slide.background.mode ||= project.theme.defaultMode;
-    slide.blocks ||= [{ id: uid(), type: 'text', content: getDefaultContentForType('text') }];
-    slide.blocks = slide.blocks.map(block => {
-      block.id ||= uid();
-      block.type ||= 'text';
-      block.content ||= getDefaultContentForType(block.type);
-      return block;
-    });
-    return slide;
+  project.slides = project.slides.map(slide => ensureIds(slide, project.theme.defaultMode));
+}
+
+function ensureIds(slide, mode = 'light') {
+  slide.id ||= uid();
+  slide.role ||= 'custom';
+  slide.layoutFamily ||= 'card';
+  slide.background ||= { mode };
+  slide.background.mode ||= mode;
+  slide.blocks ||= [{ id: uid(), type: 'text', content: getDefaultContentForType('text') }];
+  slide.blocks = slide.blocks.map(block => {
+    block.id ||= uid();
+    block.type ||= 'text';
+    block.content ||= getDefaultContentForType(block.type);
+    return block;
   });
+  return slide;
 }
 
 function createDefaultSlide(mode = 'light') {
-  return {
-    id: uid(),
+  return ensureIds({
     role: 'custom',
     layoutFamily: 'card',
     background: { mode },
-    blocks: [{ id: uid(), type: 'text', content: getDefaultContentForType('text') }]
-  };
+    blocks: [{ type: 'text', content: getDefaultContentForType('text') }]
+  }, mode);
 }
 
 function createEmptyProject() {
@@ -917,9 +1353,9 @@ function createEmptyProject() {
       labelText: 'رؤية البراند',
       footerText: '@mybrand',
     },
-    theme: { preset: 'default', defaultMode: 'light', accent: '#ff6b4a' },
+    theme: { preset: 'framex', defaultMode: 'light', accent: '#ff6b4a', showSafeArea: false },
     slides: [createDefaultSlide('light')],
-    meta: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: '2.0.0', source: 'manual' }
+    meta: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: '3.0.0', source: 'manual' }
   };
 }
 
@@ -929,12 +1365,19 @@ function buildPrompt(mode) {
   const audience = document.getElementById('promptAudience').value.trim() || 'جمهور عام';
   const tone = document.getElementById('promptTone').value;
   const slideCount = Math.max(1, Number(document.getElementById('promptSlides').value || 5));
+  const postType = document.getElementById('promptPostType').value;
+  const narrativeKey = document.getElementById('promptNarrative').value;
+  const narrativeTitle = FLOW_TEMPLATES[narrativeKey]?.title || 'Hook → Problem → Solution → CTA';
+  const brandName = state.project.brand.brandName || 'Brand';
+  const brandHandle = state.project.brand.handle || '@brand';
+  const brandLabel = state.project.brand.labelText || brandName;
+  const accent = state.project.theme.accent || '#ff6b4a';
 
   if (mode === 'blocks') {
-    return `أعطني JSON صالح فقط بدون أي شرح أو markdown.\n\nأريد بلوكات لشريحة واحدة داخل carousel.\n\nالموضوع: ${topic}\nالهدف: ${goal}\nالجمهور: ${audience}\nالنبرة: ${tone}\n\nأرجع Object واحد بهذه الصيغة فقط:\n{\n  "blocks": [\n    {\n      "type": "hero | text | checklist | stat | image-text | cta",\n      "content": {}\n    }\n  ]\n}\n\nالقواعد:\n- استخدم العربية.\n- لا تكتب أي تعليق خارج JSON.\n- إذا كان النوع checklist فليكن items مصفوفة objects بهذا الشكل: { "text": "..." }.\n- إذا كان النوع cta فأضف title و message و buttonText.\n- إذا كان النوع stat فأضف value و label.\n- اجعل النصوص قصيرة ومناسبة للكاروسيل.`;
+    return `أعطني JSON صالح فقط بدون أي شرح أو markdown.\n\nأريد بلوكات لشريحة واحدة داخل carousel.\n\nالموضوع: ${topic}\nالهدف: ${goal}\nالجمهور: ${audience}\nنوع المنشور: ${postType}\nالنبرة: ${tone}\nالبراند: ${brandName}\n\nأرجع Object واحد بهذه الصيغة فقط:\n{\n  "blocks": [\n    {\n      "type": "hero | text | checklist | stat | image-text | cta",\n      "content": {}\n    }\n  ]\n}\n\nالقواعد:\n- استخدم العربية.\n- لا تكتب أي تعليق خارج JSON.\n- ركز على slide واحدة قوية ومقروءة.\n- إذا كان النوع checklist فليكن items مصفوفة objects بهذا الشكل: { "text": "..." }.\n- إذا كان النوع cta فأضف title و message و buttonText.\n- إذا كان النوع stat فأضف value و label.\n- اجعل النصوص قصيرة ومناسبة لشريحة 1080x1350.`;
   }
 
-  return `أعطني JSON صالح فقط بدون أي شرح أو markdown.\n\nأريد Project JSON كامل لبناء carousel داخل engine.\n\nالموضوع: ${topic}\nالهدف: ${goal}\nالجمهور: ${audience}\nالنبرة: ${tone}\nعدد الشرائح: ${slideCount}\n\nأرجع Object واحد بهذه الصيغة العامة:\n{\n  "name": "...",\n  "description": "...",\n  "language": "ar",\n  "dialect": "iraqi",\n  "brand": {\n    "brandName": "FrameX",\n    "handle": "@framex",\n    "labelText": "رؤية FrameX",\n    "footerText": "@framex"\n  },\n  "theme": {\n    "preset": "framex-default",\n    "defaultMode": "light",\n    "accent": "#ff6b4a"\n  },\n  "slides": [\n    {\n      "role": "cover | intro | problem | solution | proof | cta | summary | custom",\n      "layoutFamily": "centered | card | stack | top-image | dark | premium | minimal",\n      "background": {\n        "mode": "light | dark | image | custom",\n        "imageUrl": "",\n        "customColor": ""\n      },\n      "blocks": [\n        { "type": "hero", "content": { "eyebrow": "", "title": "", "highlightedText": "", "subtitle": "" } }\n      ]\n    }\n  ]\n}\n\nالقواعد:\n- لا تكتب أي شيء خارج JSON.\n- استخدم ${slideCount} شرائح تقريبًا.\n- اجعل flow منطقي: hook ثم problem ثم solution ثم CTA إن كان مناسبًا.\n- استخدم فقط الأنواع المدعومة: hero, text, checklist, stat, image-text, cta.\n- إذا استخدمت checklist فليكن items مصفوفة objects بهذا الشكل: { "text": "..." }.\n- اجعل النصوص قصيرة وقابلة للعرض داخل شريحة 1080x1350.`;
+  return `أعطني JSON صالح فقط بدون أي شرح أو markdown.\n\nأريد Project JSON كامل لبناء carousel داخل engine.\n\nالموضوع: ${topic}\nالهدف: ${goal}\nالجمهور: ${audience}\nنوع المنشور: ${postType}\nالسرد المطلوب: ${narrativeTitle}\nالنبرة: ${tone}\nعدد الشرائح: ${slideCount}\n\nسياق البراند:\n- brandName: ${brandName}\n- handle: ${brandHandle}\n- labelText: ${brandLabel}\n- accent: ${accent}\n\nأرجع Object واحد بهذه الصيغة العامة:\n{\n  "name": "...",\n  "description": "...",\n  "language": "ar",\n  "dialect": "iraqi",\n  "brand": {\n    "brandName": "${brandName}",\n    "handle": "${brandHandle}",\n    "labelText": "${brandLabel}",\n    "footerText": "${brandHandle}"\n  },\n  "theme": {\n    "preset": "framex",\n    "defaultMode": "${state.project.theme.defaultMode || 'light'}",\n    "accent": "${accent}"\n  },\n  "slides": [\n    {\n      "role": "cover | intro | problem | solution | proof | cta | summary | custom",\n      "layoutFamily": "centered | card | stack | top-image | dark | premium | minimal",\n      "background": {\n        "mode": "light | dark | image | custom",\n        "imageUrl": "",\n        "customColor": ""\n      },\n      "blocks": [\n        { "type": "hero", "content": { "eyebrow": "", "title": "", "highlightedText": "", "subtitle": "" } }\n      ]\n    }\n  ]\n}\n\nالقواعد:\n- لا تكتب أي شيء خارج JSON.\n- اتبع السرد: ${narrativeTitle}.\n- استخدم ${slideCount} شرائح تقريبًا.\n- استخدم فقط الأنواع المدعومة: hero, text, checklist, stat, image-text, cta.\n- إذا استخدمت checklist فليكن items مصفوفة objects بهذا الشكل: { "text": "..." }.\n- اجعل النصوص قصيرة وقابلة للعرض داخل شريحة 1080x1350.\n- أضف CTA نهائي واضح.\n- إذا أمكن، أضف شريحة proof أو stat واحدة على الأقل.`;
 }
 
 function activateTab(tabName) {
@@ -953,7 +1396,12 @@ function showToast(message) {
 
 function setFieldValue(id, value) {
   const field = document.getElementById(id);
-  if (field && field.value !== value) field.value = value;
+  if (!field) return;
+  if (field.type === 'checkbox') {
+    field.checked = !!value;
+    return;
+  }
+  if (field.value !== String(value ?? '')) field.value = value ?? '';
 }
 
 function uid() {
@@ -985,6 +1433,15 @@ function el(tag, className, text) {
   if (className) node.className = className;
   if (text) node.textContent = text;
   return node;
+}
+
+function shortText(value, max) {
+  const text = String(value || '').trim();
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
+function dedupe(items) {
+  return [...new Set(items.filter(Boolean))];
 }
 
 function escapeHtml(value) {
