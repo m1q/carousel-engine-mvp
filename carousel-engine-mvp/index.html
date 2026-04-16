@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carousel Blocks Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div>
+          <p class="eyebrow">Carousel Builder</p>
+          <h1>محرك الشرائح بالبلوكات</h1>
+        </div>
+        <p class="subtle">بدون API — انسخ المحتوى من ChatGPT والصقه هنا كـ JSON أو عدّله يدويًا.</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="project">المشروع</button>
+        <button class="tab-btn" data-tab="slides">الشرائح</button>
+        <button class="tab-btn" data-tab="blocks">البلوكات</button>
+        <button class="tab-btn" data-tab="json">JSON</button>
+      </div>
+
+      <div class="tab-panels">
+        <section class="tab-panel active" id="tab-project">
+          <div class="panel-card">
+            <h2>بيانات المشروع</h2>
+            <label>اسم المشروع
+              <input id="projectName" type="text" />
+            </label>
+            <label>اسم البراند
+              <input id="brandName" type="text" />
+            </label>
+            <label>الهاندل / الفوتر
+              <input id="brandHandle" type="text" />
+            </label>
+            <label>النص العلوي
+              <input id="brandLabel" type="text" />
+            </label>
+            <label>لون الـ Accent
+              <input id="accentColor" type="color" />
+            </label>
+            <label>وضع الخلفية الافتراضي
+              <select id="themeMode">
+                <option value="light">فاتح</option>
+                <option value="dark">غامق</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="panel-card">
+            <h2>إجراءات سريعة</h2>
+            <div class="button-grid two">
+              <button id="addSlideBtn" class="primary">إضافة شريحة</button>
+              <button id="resetDemoBtn">استرجاع الديمو</button>
+              <button id="saveLocalBtn">حفظ محلي</button>
+              <button id="downloadJsonBtn">تحميل JSON</button>
+            </div>
+            <p class="hint">الحفظ المحلي يستخدم localStorage في المتصفح.</p>
+          </div>
+
+          <div class="panel-card">
+            <h2>كيف تستخدمه مع ChatGPT؟</h2>
+            <ol class="hint-list">
+              <li>اطلب من ChatGPT يولد لك Project JSON أو blocks فقط.</li>
+              <li>انسخ الناتج والصقه في تبويب JSON.</li>
+              <li>اضغط <strong>استيراد JSON</strong>.</li>
+              <li>عدّل أي شريحة أو بلوك يدويًا من التبويبات.</li>
+            </ol>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-slides">
+          <div class="panel-card sticky-card">
+            <div class="panel-heading-row">
+              <h2>الشرائح</h2>
+              <button id="duplicateSlideBtn" title="نسخ الشريحة">نسخ</button>
+            </div>
+            <div id="slidesList" class="slides-list"></div>
+          </div>
+
+          <div class="panel-card">
+            <h2>تحرير الشريحة المحددة</h2>
+            <label>نوع الشريحة
+              <select id="slideRole">
+                <option value="cover">cover</option>
+                <option value="intro">intro</option>
+                <option value="problem">problem</option>
+                <option value="solution">solution</option>
+                <option value="proof">proof</option>
+                <option value="cta">cta</option>
+                <option value="summary">summary</option>
+                <option value="custom">custom</option>
+              </select>
+            </label>
+            <label>نمط التخطيط
+              <select id="slideLayout">
+                <option value="centered">centered</option>
+                <option value="card">card</option>
+                <option value="stack">stack</option>
+                <option value="top-image">top-image</option>
+                <option value="dark">dark</option>
+                <option value="premium">premium</option>
+                <option value="minimal">minimal</option>
+              </select>
+            </label>
+            <label>الخلفية
+              <select id="slideBgMode">
+                <option value="light">light</option>
+                <option value="dark">dark</option>
+                <option value="image">image</option>
+                <option value="custom">custom</option>
+              </select>
+            </label>
+            <label>رابط صورة الخلفية
+              <input id="slideBgImage" type="text" placeholder="https://..." />
+            </label>
+            <label>لون مخصص للخلفية
+              <input id="slideBgColor" type="color" />
+            </label>
+            <div class="button-grid two">
+              <button id="moveSlideUpBtn">تحريك لأعلى</button>
+              <button id="moveSlideDownBtn">تحريك لأسفل</button>
+              <button id="deleteSlideBtn" class="danger">حذف الشريحة</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-blocks">
+          <div class="panel-card sticky-card">
+            <div class="panel-heading-row">
+              <h2>بلوكات الشريحة</h2>
+              <select id="newBlockType">
+                <option value="hero">hero</option>
+                <option value="text">text</option>
+                <option value="checklist">checklist</option>
+                <option value="stat">stat</option>
+                <option value="image-text">image-text</option>
+                <option value="cta">cta</option>
+              </select>
+            </div>
+            <div class="button-grid one">
+              <button id="addBlockBtn" class="primary">إضافة بلوك</button>
+            </div>
+            <div id="blocksList" class="blocks-list"></div>
+          </div>
+
+          <div class="panel-card">
+            <h2>تحرير البلوك المحدد</h2>
+            <label>نوع البلوك
+              <select id="blockTypeSelect">
+                <option value="hero">hero</option>
+                <option value="text">text</option>
+                <option value="checklist">checklist</option>
+                <option value="stat">stat</option>
+                <option value="image-text">image-text</option>
+                <option value="cta">cta</option>
+              </select>
+            </label>
+            <div id="blockEditorFields"></div>
+            <div class="button-grid two">
+              <button id="duplicateBlockBtn">نسخ البلوك</button>
+              <button id="moveBlockUpBtn">لأعلى</button>
+              <button id="moveBlockDownBtn">لأسفل</button>
+              <button id="deleteBlockBtn" class="danger">حذف البلوك</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-json">
+          <div class="panel-card">
+            <h2>استيراد / تصدير JSON</h2>
+            <textarea id="jsonEditor" class="json-editor" spellcheck="false"></textarea>
+            <div class="button-grid two">
+              <button id="importJsonBtn" class="primary">استيراد JSON</button>
+              <button id="copyJsonBtn">نسخ JSON</button>
+              <button id="loadCurrentJsonBtn">تحميل الحالي داخل الحقل</button>
+            </div>
+            <p class="hint">الصيغة المطلوبة موجودة في ملف <strong>sample-project.json</strong>.</p>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <div class="workspace-toolbar">
+        <div>
+          <strong id="workspaceTitle">—</strong>
+          <span class="subtle" id="workspaceMeta">0 شرائح</span>
+        </div>
+        <div class="toolbar-actions">
+          <button id="zoomOutBtn">-</button>
+          <span id="zoomLabel">45%</span>
+          <button id="zoomInBtn">+</button>
+        </div>
+      </div>
+
+      <div class="preview-area" id="previewArea"></div>
+    </main>
+  </div>
+
+  <template id="slideListItemTemplate">
+    <button class="list-item slide-item">
+      <span class="badge"></span>
+      <div>
+        <strong class="title"></strong>
+        <p class="meta"></p>
+      </div>
+    </button>
+  </template>
+
+  <template id="blockListItemTemplate">
+    <button class="list-item block-item">
+      <span class="badge"></span>
+      <div>
+        <strong class="title"></strong>
+        <p class="meta"></p>
+      </div>
+    </button>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

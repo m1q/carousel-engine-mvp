@@ -1,0 +1,98 @@
+{
+  "id": "project-demo-001",
+  "name": "Marketing Carousel Example",
+  "description": "مثال جاهز للاستيراد داخل المحرك",
+  "language": "ar",
+  "dialect": "iraqi",
+  "canvas": {
+    "width": 1080,
+    "height": 1350,
+    "ratio": "4:5"
+  },
+  "brand": {
+    "brandName": "FrameX",
+    "handle": "@framex",
+    "labelText": "رؤية FrameX",
+    "footerText": "@framex"
+  },
+  "theme": {
+    "preset": "framex-default",
+    "defaultMode": "light",
+    "accent": "#ff6b4a"
+  },
+  "slides": [
+    {
+      "id": "slide-1",
+      "role": "cover",
+      "layoutFamily": "dark",
+      "background": {
+        "mode": "image",
+        "imageUrl": "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=1400&auto=format&fit=crop"
+      },
+      "blocks": [
+        {
+          "id": "block-1",
+          "type": "hero",
+          "content": {
+            "eyebrow": "مو لازم تبني كل شريحة من الصفر",
+            "title": "حوّل فكرتك",
+            "highlightedText": "إلى بلوكات مرتبة",
+            "subtitle": "خذ المحتوى من ChatGPT والصقه هنا كـ JSON بدل إعادة كتابة كل شيء يدويًا."
+          }
+        }
+      ]
+    },
+    {
+      "id": "slide-2",
+      "role": "problem",
+      "layoutFamily": "card",
+      "background": { "mode": "light" },
+      "blocks": [
+        {
+          "id": "block-2",
+          "type": "text",
+          "content": {
+            "title": "ليش هذا مهم؟",
+            "paragraph": "لأنك تحتاج سرعة في كتابة المحتوى مع بقاء التصميم ثابت ونظيف وقابل للتعديل."
+          }
+        },
+        {
+          "id": "block-3",
+          "type": "checklist",
+          "content": {
+            "title": "الفوائد",
+            "items": [
+              { "text": "توفير وقت" },
+              { "text": "سهولة إعادة الاستخدام" },
+              { "text": "تحكم أفضل بالمحتوى" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "slide-3",
+      "role": "cta",
+      "layoutFamily": "premium",
+      "background": { "mode": "dark" },
+      "blocks": [
+        {
+          "id": "block-4",
+          "type": "cta",
+          "content": {
+            "title": "ابدأ من الآن",
+            "message": "انسخ هذا المثال أو عدّله وابدأ ببناء carousel جديد خلال دقائق.",
+            "buttonText": "ابدأ التحرير",
+            "subtext": "يمكنك إضافة أو حذف أو نسخ أي بلوك."
+          }
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "createdAt": "2026-04-17T00:00:00.000Z",
+    "updatedAt": "2026-04-17T00:00:00.000Z",
+    "version": "1.0.0",
+    "source": "manual"
+  }
+}
