@@ -1,14 +1,8 @@
 {
-  "id": "project-demo-001",
   "name": "Marketing Carousel Example",
   "description": "مثال جاهز للاستيراد داخل المحرك",
   "language": "ar",
   "dialect": "iraqi",
-  "canvas": {
-    "width": 1080,
-    "height": 1350,
-    "ratio": "4:5"
-  },
   "brand": {
     "brandName": "FrameX",
     "handle": "@framex",
@@ -22,7 +16,6 @@
   },
   "slides": [
     {
-      "id": "slide-1",
       "role": "cover",
       "layoutFamily": "dark",
       "background": {
@@ -31,7 +24,6 @@
       },
       "blocks": [
         {
-          "id": "block-1",
           "type": "hero",
           "content": {
             "eyebrow": "مو لازم تبني كل شريحة من الصفر",
@@ -43,13 +35,11 @@
       ]
     },
     {
-      "id": "slide-2",
       "role": "problem",
       "layoutFamily": "card",
       "background": { "mode": "light" },
       "blocks": [
         {
-          "id": "block-2",
           "type": "text",
           "content": {
             "title": "ليش هذا مهم؟",
@@ -57,7 +47,6 @@
           }
         },
         {
-          "id": "block-3",
           "type": "checklist",
           "content": {
             "title": "الفوائد",
@@ -71,13 +60,11 @@
       ]
     },
     {
-      "id": "slide-3",
       "role": "cta",
       "layoutFamily": "premium",
       "background": { "mode": "dark" },
       "blocks": [
         {
-          "id": "block-4",
           "type": "cta",
           "content": {
             "title": "ابدأ من الآن",
@@ -88,11 +75,5 @@
         }
       ]
     }
-  ],
-  "meta": {
-    "createdAt": "2026-04-17T00:00:00.000Z",
-    "updatedAt": "2026-04-17T00:00:00.000Z",
-    "version": "1.0.0",
-    "source": "manual"
-  }
+  ]
 }

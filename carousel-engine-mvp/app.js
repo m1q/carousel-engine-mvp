@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'carousel-blocks-engine-project-v1';
+const STORAGE_KEY = 'carousel-blocks-engine-project-v2';
 
 const demoProject = {
   id: uid(),
@@ -35,7 +35,7 @@ const demoProject = {
             eyebrow: 'المشكلة مو بزر التمويل',
             title: 'مموّل إعلانك',
             highlightedText: 'بس ماكو مبيعات؟',
-            subtitle: 'هذا الـ engine يخليك تبني المحتوى كبلوكات بدل كتابة شريحة كاملة من الصفر.'
+            subtitle: 'حوّل فكرتك إلى بلوكات واضحة وخذ المحتوى من ChatGPT كـ JSON بدل كتابة شريحة كاملة من الصفر.'
           }
         }
       ]
@@ -91,7 +91,7 @@ const demoProject = {
             title: 'شغلك يصير أسرع',
             message: 'ولّد المحتوى من ChatGPT كـ JSON، وبعدها عدّل عليه هنا بسرعة.',
             buttonText: 'جرّب الاستيراد الآن',
-            subtext: 'استخدم ملف sample-project.json كنقطة بداية.'
+            subtext: 'استخدم تبويب Prompts كنقطة بداية.'
           }
         }
       ]
@@ -100,7 +100,7 @@ const demoProject = {
   meta: {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    version: '1.0.0',
+    version: '2.0.0',
     source: 'manual'
   }
 };
@@ -110,6 +110,8 @@ const state = {
   selectedSlideId: null,
   selectedBlockId: null,
   zoom: 45,
+  promptMode: 'project',
+  autosaveState: 'Autosaved'
 };
 
 const refs = {
@@ -121,14 +123,15 @@ const refs = {
   blockEditorFields: document.getElementById('blockEditorFields'),
   jsonEditor: document.getElementById('jsonEditor'),
   zoomLabel: document.getElementById('zoomLabel'),
+  autosaveState: document.getElementById('autosaveState'),
+  promptOutput: document.getElementById('promptOutput'),
+  toast: document.getElementById('toast'),
 };
 
 bootstrap();
 
 function bootstrap() {
-  if (!state.project.slides.length) {
-    state.project.slides = structuredClone(demoProject.slides);
-  }
+  normalizeProject(state.project);
   state.selectedSlideId = state.project.slides[0]?.id || null;
   state.selectedBlockId = getSelectedSlide()?.blocks[0]?.id || null;
 
@@ -137,6 +140,7 @@ function bootstrap() {
   bindSlideInputs();
   bindBlockEditor();
   bindButtons();
+  bindPromptBuilder();
   render();
 }
 
@@ -152,71 +156,24 @@ function bindTabs() {
 }
 
 function bindProjectInputs() {
-  const projectName = document.getElementById('projectName');
-  const brandName = document.getElementById('brandName');
-  const brandHandle = document.getElementById('brandHandle');
-  const brandLabel = document.getElementById('brandLabel');
-  const accentColor = document.getElementById('accentColor');
-  const themeMode = document.getElementById('themeMode');
-
-  projectName.addEventListener('input', e => {
-    state.project.name = e.target.value;
-    touch();
+  bindInput('projectName', value => state.project.name = value);
+  bindInput('projectDescription', value => state.project.description = value);
+  bindInput('brandName', value => state.project.brand.brandName = value);
+  bindInput('brandHandle', value => {
+    state.project.brand.handle = value;
+    state.project.brand.footerText = value;
   });
-  brandName.addEventListener('input', e => {
-    state.project.brand.brandName = e.target.value;
-    touch();
-  });
-  brandHandle.addEventListener('input', e => {
-    state.project.brand.handle = e.target.value;
-    state.project.brand.footerText = e.target.value;
-    touch();
-  });
-  brandLabel.addEventListener('input', e => {
-    state.project.brand.labelText = e.target.value;
-    touch();
-  });
-  accentColor.addEventListener('input', e => {
-    state.project.theme.accent = e.target.value;
-    touch();
-  });
-  themeMode.addEventListener('change', e => {
-    state.project.theme.defaultMode = e.target.value;
-    touch();
-  });
+  bindInput('brandLabel', value => state.project.brand.labelText = value);
+  bindInput('accentColor', value => state.project.theme.accent = value);
+  bindChange('themeMode', value => state.project.theme.defaultMode = value);
 }
 
 function bindSlideInputs() {
-  document.getElementById('slideRole').addEventListener('change', e => {
-    const slide = getSelectedSlide();
-    if (!slide) return;
-    slide.role = e.target.value;
-    touch();
-  });
-  document.getElementById('slideLayout').addEventListener('change', e => {
-    const slide = getSelectedSlide();
-    if (!slide) return;
-    slide.layoutFamily = e.target.value;
-    touch();
-  });
-  document.getElementById('slideBgMode').addEventListener('change', e => {
-    const slide = getSelectedSlide();
-    if (!slide) return;
-    slide.background.mode = e.target.value;
-    touch();
-  });
-  document.getElementById('slideBgImage').addEventListener('input', e => {
-    const slide = getSelectedSlide();
-    if (!slide) return;
-    slide.background.imageUrl = e.target.value;
-    touch();
-  });
-  document.getElementById('slideBgColor').addEventListener('input', e => {
-    const slide = getSelectedSlide();
-    if (!slide) return;
-    slide.background.customColor = e.target.value;
-    touch();
-  });
+  bindChange('slideRole', value => { const slide = getSelectedSlide(); if (slide) slide.role = value; });
+  bindChange('slideLayout', value => { const slide = getSelectedSlide(); if (slide) slide.layoutFamily = value; });
+  bindChange('slideBgMode', value => { const slide = getSelectedSlide(); if (slide) slide.background.mode = value; });
+  bindInput('slideBgImage', value => { const slide = getSelectedSlide(); if (slide) slide.background.imageUrl = value; });
+  bindInput('slideBgColor', value => { const slide = getSelectedSlide(); if (slide) slide.background.customColor = value; });
 }
 
 function bindBlockEditor() {
@@ -225,12 +182,13 @@ function bindBlockEditor() {
     if (!block) return;
     block.type = e.target.value;
     block.content = getDefaultContentForType(block.type);
-    touch();
+    touch('تم تغيير نوع البلوك.');
   });
 }
 
 function bindButtons() {
   document.getElementById('addSlideBtn').addEventListener('click', addSlide);
+  document.getElementById('newProjectBtn').addEventListener('click', newProject);
   document.getElementById('duplicateSlideBtn').addEventListener('click', duplicateSlide);
   document.getElementById('deleteSlideBtn').addEventListener('click', deleteSlide);
   document.getElementById('moveSlideUpBtn').addEventListener('click', () => moveSlide(-1));
@@ -245,23 +203,71 @@ function bindButtons() {
   document.getElementById('resetDemoBtn').addEventListener('click', resetDemo);
   document.getElementById('importJsonBtn').addEventListener('click', importJson);
   document.getElementById('copyJsonBtn').addEventListener('click', copyJson);
-  document.getElementById('loadCurrentJsonBtn').addEventListener('click', () => refs.jsonEditor.value = serializeProject());
+  document.getElementById('loadCurrentJsonBtn').addEventListener('click', () => {
+    refs.jsonEditor.value = serializeProject();
+    showToast('تم تحميل JSON الحالي في الحقل.');
+  });
   document.getElementById('zoomInBtn').addEventListener('click', () => setZoom(state.zoom + 5));
   document.getElementById('zoomOutBtn').addEventListener('click', () => setZoom(state.zoom - 5));
 }
 
+function bindPromptBuilder() {
+  document.getElementById('buildProjectPromptBtn').addEventListener('click', () => {
+    state.promptMode = 'project';
+    refs.promptOutput.value = buildPrompt('project');
+  });
+  document.getElementById('buildBlocksPromptBtn').addEventListener('click', () => {
+    state.promptMode = 'blocks';
+    refs.promptOutput.value = buildPrompt('blocks');
+  });
+  document.getElementById('copyPromptBtn').addEventListener('click', async () => {
+    const value = refs.promptOutput.value.trim();
+    if (!value) {
+      showToast('ابنِ prompt أولًا.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(value);
+      showToast('تم نسخ الـ prompt.');
+    } catch {
+      showToast('تعذر النسخ من هذا المتصفح.');
+    }
+  });
+  document.getElementById('sendPromptToJsonBtn').addEventListener('click', () => {
+    refs.jsonEditor.value = refs.promptOutput.value;
+    showToast('تم إرسال النص إلى تبويب JSON.');
+    activateTab('json');
+  });
+}
+
+function bindInput(id, callback) {
+  document.getElementById(id).addEventListener('input', e => {
+    callback(e.target.value);
+    touch();
+  });
+}
+
+function bindChange(id, callback) {
+  document.getElementById(id).addEventListener('change', e => {
+    callback(e.target.value);
+    touch();
+  });
+}
+
 function addSlide() {
-  const slide = {
-    id: uid(),
-    role: 'custom',
-    layoutFamily: 'card',
-    background: { mode: state.project.theme.defaultMode || 'light' },
-    blocks: [{ id: uid(), type: 'text', content: getDefaultContentForType('text') }]
-  };
+  const slide = createDefaultSlide(state.project.theme.defaultMode || 'light');
   state.project.slides.push(slide);
   state.selectedSlideId = slide.id;
   state.selectedBlockId = slide.blocks[0].id;
-  touch();
+  touch('تمت إضافة شريحة جديدة.');
+}
+
+function newProject() {
+  if (!confirm('إنشاء مشروع فارغ جديد؟')) return;
+  state.project = createEmptyProject();
+  state.selectedSlideId = state.project.slides[0].id;
+  state.selectedBlockId = state.project.slides[0].blocks[0].id;
+  touch('تم إنشاء مشروع فارغ.');
 }
 
 function duplicateSlide() {
@@ -274,12 +280,12 @@ function duplicateSlide() {
   state.project.slides.splice(index + 1, 0, clone);
   state.selectedSlideId = clone.id;
   state.selectedBlockId = clone.blocks[0]?.id || null;
-  touch();
+  touch('تم نسخ الشريحة.');
 }
 
 function deleteSlide() {
   if (state.project.slides.length <= 1) {
-    alert('لا يمكن حذف آخر شريحة.');
+    showToast('لا يمكن حذف آخر شريحة.');
     return;
   }
   const index = getSelectedSlideIndex();
@@ -287,7 +293,7 @@ function deleteSlide() {
   const nextSlide = state.project.slides[Math.max(0, index - 1)] || state.project.slides[0];
   state.selectedSlideId = nextSlide?.id || null;
   state.selectedBlockId = nextSlide?.blocks[0]?.id || null;
-  touch();
+  touch('تم حذف الشريحة.');
 }
 
 function moveSlide(direction) {
@@ -295,7 +301,7 @@ function moveSlide(direction) {
   const nextIndex = index + direction;
   if (index < 0 || nextIndex < 0 || nextIndex >= state.project.slides.length) return;
   swap(state.project.slides, index, nextIndex);
-  touch();
+  touch('تم تحريك الشريحة.');
 }
 
 function addBlock() {
@@ -305,7 +311,7 @@ function addBlock() {
   const block = { id: uid(), type, content: getDefaultContentForType(type) };
   slide.blocks.push(block);
   state.selectedBlockId = block.id;
-  touch();
+  touch('تمت إضافة بلوك جديد.');
 }
 
 function duplicateBlock() {
@@ -317,20 +323,20 @@ function duplicateBlock() {
   const index = getSelectedBlockIndex();
   slide.blocks.splice(index + 1, 0, clone);
   state.selectedBlockId = clone.id;
-  touch();
+  touch('تم نسخ البلوك.');
 }
 
 function deleteBlock() {
   const slide = getSelectedSlide();
   if (!slide) return;
   if (slide.blocks.length <= 1) {
-    alert('لا يمكن حذف آخر بلوك في الشريحة.');
+    showToast('لا يمكن حذف آخر بلوك في الشريحة.');
     return;
   }
   const index = getSelectedBlockIndex();
   slide.blocks.splice(index, 1);
   state.selectedBlockId = slide.blocks[Math.max(0, index - 1)]?.id || slide.blocks[0]?.id || null;
-  touch();
+  touch('تم حذف البلوك.');
 }
 
 function moveBlock(direction) {
@@ -339,7 +345,7 @@ function moveBlock(direction) {
   const nextIndex = index + direction;
   if (!slide || index < 0 || nextIndex < 0 || nextIndex >= slide.blocks.length) return;
   swap(slide.blocks, index, nextIndex);
-  touch();
+  touch('تم تحريك البلوك.');
 }
 
 function render() {
@@ -348,6 +354,7 @@ function render() {
   refs.zoomLabel.textContent = `${state.zoom}%`;
   refs.workspaceTitle.textContent = state.project.name || 'بدون عنوان';
   refs.workspaceMeta.textContent = `${state.project.slides.length} شرائح`;
+  refs.autosaveState.textContent = state.autosaveState;
 
   syncProjectInputs();
   syncSlideInputs();
@@ -358,22 +365,23 @@ function render() {
 }
 
 function syncProjectInputs() {
-  document.getElementById('projectName').value = state.project.name || '';
-  document.getElementById('brandName').value = state.project.brand.brandName || '';
-  document.getElementById('brandHandle').value = state.project.brand.handle || '';
-  document.getElementById('brandLabel').value = state.project.brand.labelText || '';
-  document.getElementById('accentColor').value = state.project.theme.accent || '#ff6b4a';
-  document.getElementById('themeMode').value = state.project.theme.defaultMode || 'light';
+  setFieldValue('projectName', state.project.name || '');
+  setFieldValue('projectDescription', state.project.description || '');
+  setFieldValue('brandName', state.project.brand.brandName || '');
+  setFieldValue('brandHandle', state.project.brand.handle || '');
+  setFieldValue('brandLabel', state.project.brand.labelText || '');
+  setFieldValue('accentColor', state.project.theme.accent || '#ff6b4a');
+  setFieldValue('themeMode', state.project.theme.defaultMode || 'light');
 }
 
 function syncSlideInputs() {
   const slide = getSelectedSlide();
   if (!slide) return;
-  document.getElementById('slideRole').value = slide.role || 'custom';
-  document.getElementById('slideLayout').value = slide.layoutFamily || 'card';
-  document.getElementById('slideBgMode').value = slide.background?.mode || 'light';
-  document.getElementById('slideBgImage').value = slide.background?.imageUrl || '';
-  document.getElementById('slideBgColor').value = slide.background?.customColor || '#f7f7f5';
+  setFieldValue('slideRole', slide.role || 'custom');
+  setFieldValue('slideLayout', slide.layoutFamily || 'card');
+  setFieldValue('slideBgMode', slide.background?.mode || 'light');
+  setFieldValue('slideBgImage', slide.background?.imageUrl || '');
+  setFieldValue('slideBgColor', slide.background?.customColor || '#f7f7f5');
 }
 
 function renderSlidesList() {
@@ -385,11 +393,7 @@ function renderSlidesList() {
     node.querySelector('.title').textContent = `${slide.role} / ${slide.layoutFamily}`;
     node.querySelector('.meta').textContent = `${slide.blocks.length} بلوك`;
     if (slide.id === state.selectedSlideId) node.classList.add('active');
-    node.addEventListener('click', () => {
-      state.selectedSlideId = slide.id;
-      state.selectedBlockId = slide.blocks[0]?.id || null;
-      render();
-    });
+    node.addEventListener('click', () => selectSlide(slide.id));
     refs.slidesList.appendChild(node);
   });
 }
@@ -420,36 +424,38 @@ function renderBlockEditor() {
     refs.blockEditorFields.innerHTML = '<p class="hint">اختر بلوك أولاً.</p>';
     return;
   }
-  document.getElementById('blockTypeSelect').value = block.type;
 
+  setFieldValue('blockTypeSelect', block.type);
   const fields = getEditorConfigForBlock(block);
+
   fields.forEach(field => {
     const wrapper = document.createElement('label');
     wrapper.textContent = field.label;
-    let control;
+    const control = document.createElement(field.type === 'textarea' ? 'textarea' : 'input');
     if (field.type === 'textarea') {
-      control = document.createElement('textarea');
       control.rows = field.rows || 4;
     } else {
-      control = document.createElement('input');
       control.type = field.type || 'text';
     }
-    control.value = getValueByPath(block.content, field.path) ?? '';
+
+    if (field.transform === 'arrayLines') {
+      control.value = (block.content[field.path] || []).map(item => typeof item === 'string' ? item : item.text).join('\n');
+    } else {
+      control.value = getValueByPath(block.content, field.path) ?? '';
+    }
+
     control.addEventListener('input', e => {
-      setValueByPath(block.content, field.path, e.target.value);
       if (field.transform === 'arrayLines') {
         block.content[field.path] = e.target.value
           .split('\n')
           .map(line => line.trim())
           .filter(Boolean)
           .map(text => ({ text }));
+      } else {
+        setValueByPath(block.content, field.path, e.target.value);
       }
       touch();
     });
-
-    if (field.transform === 'arrayLines') {
-      control.value = (block.content[field.path] || []).map(item => item.text || item).join('\n');
-    }
 
     wrapper.appendChild(control);
     refs.blockEditorFields.appendChild(wrapper);
@@ -462,15 +468,17 @@ function renderPreview() {
   slides.forEach((slide, index) => {
     const frame = document.createElement('section');
     frame.className = 'slide-frame';
+    if (slide.id === state.selectedSlideId) frame.classList.add('is-selected');
+    frame.addEventListener('click', () => selectSlide(slide.id));
+
     const surface = document.createElement('div');
     surface.className = `slide-surface ${getSurfaceModeClasses(slide)}`;
     surface.style.setProperty('--slide-bg', getSlideBackground(slide));
     surface.style.setProperty('--slide-text', getSlideTextColor(slide));
+
     if (slide.background?.mode === 'image' && slide.background?.imageUrl) {
       surface.style.backgroundImage = `url(${slide.background.imageUrl})`;
-      const overlay = document.createElement('div');
-      overlay.className = 'slide-overlay';
-      surface.appendChild(overlay);
+      surface.appendChild(el('div', 'slide-overlay'));
     }
 
     const top = document.createElement('div');
@@ -482,18 +490,30 @@ function renderPreview() {
 
     const body = document.createElement('div');
     body.className = 'slide-body';
+
     if (!slide.blocks?.length) {
-      const empty = document.createElement('div');
-      empty.className = 'empty-state';
-      empty.textContent = 'هذه الشريحة فارغة. أضف بلوك من تبويب البلوكات.';
-      body.appendChild(empty);
+      body.appendChild(el('div', 'empty-state', 'هذه الشريحة فارغة. أضف بلوك من تبويب البلوكات.'));
     } else {
-      slide.blocks.forEach(block => body.appendChild(renderBlock(block, slide)));
+      slide.blocks.forEach(block => {
+        const node = renderBlock(block, slide);
+        if (block.id === state.selectedBlockId && slide.id === state.selectedSlideId) {
+          node.style.outline = `3px solid ${state.project.theme.accent || '#ff6b4a'}`;
+          node.style.outlineOffset = '6px';
+        }
+        node.addEventListener('click', event => {
+          event.stopPropagation();
+          selectSlide(slide.id);
+          state.selectedBlockId = block.id;
+          render();
+        });
+        body.appendChild(node);
+      });
     }
 
     const footer = document.createElement('div');
     footer.className = 'slide-footer';
     footer.appendChild(el('div', 'slide-brand', state.project.brand.footerText || state.project.brand.handle || ''));
+
     const progress = document.createElement('div');
     progress.className = 'progress';
     slides.forEach((_, pIndex) => {
@@ -513,20 +533,13 @@ function renderPreview() {
 
 function renderBlock(block, slide) {
   switch (block.type) {
-    case 'hero':
-      return renderHeroBlock(block);
-    case 'text':
-      return renderTextBlock(block, slide);
-    case 'checklist':
-      return renderChecklistBlock(block, slide);
-    case 'stat':
-      return renderStatBlock(block, slide);
-    case 'image-text':
-      return renderImageTextBlock(block, slide);
-    case 'cta':
-      return renderCtaBlock(block, slide);
-    default:
-      return el('div', 'block card-box', `نوع بلوك غير مدعوم: ${block.type}`);
+    case 'hero': return renderHeroBlock(block);
+    case 'text': return renderTextBlock(block, slide);
+    case 'checklist': return renderChecklistBlock(block, slide);
+    case 'stat': return renderStatBlock(block, slide);
+    case 'image-text': return renderImageTextBlock(block, slide);
+    case 'cta': return renderCtaBlock(block, slide);
+    default: return el('div', 'block card-box', `نوع بلوك غير مدعوم: ${block.type}`);
   }
 }
 
@@ -557,7 +570,7 @@ function renderChecklistBlock(block, slide) {
   const { title, items = [] } = block.content || {};
   const wrap = document.createElement('div');
   wrap.className = `block checklist card-box ${slide.background?.mode === 'dark' ? 'darkable' : ''}`;
-  wrap.innerHTML = `${title ? `<h3>${escapeHtml(title)}</h3>` : ''}`;
+  if (title) wrap.innerHTML = `<h3>${escapeHtml(title)}</h3>`;
   const ul = document.createElement('ul');
   items.forEach(item => {
     const li = document.createElement('li');
@@ -673,20 +686,13 @@ function getEditorConfigForBlock(block) {
 
 function getDefaultContentForType(type) {
   switch (type) {
-    case 'hero':
-      return { eyebrow: 'عنوان صغير', title: 'عنوان رئيسي', highlightedText: 'نص مميز', subtitle: 'سطر توضيحي مختصر.' };
-    case 'text':
-      return { title: 'عنوان بلوك', paragraph: 'اكتب النص هنا.' };
-    case 'checklist':
-      return { title: 'عنوان قائمة', items: [{ text: 'نقطة أولى' }, { text: 'نقطة ثانية' }, { text: 'نقطة ثالثة' }] };
-    case 'stat':
-      return { title: 'رقم مهم', value: '70%', label: 'وصف مختصر للرقم', supportingText: 'تفصيل بسيط.' };
-    case 'image-text':
-      return { imageUrl: '', title: 'عنوان مع صورة', paragraph: 'اكتب الشرح هنا.', caption: 'ملاحظة صغيرة' };
-    case 'cta':
-      return { title: 'دعوة للإجراء', message: 'اكتب الرسالة التسويقية هنا.', buttonText: 'اتخذ إجراء', subtext: 'شرح أو توضيح إضافي' };
-    default:
-      return {};
+    case 'hero': return { eyebrow: 'عنوان صغير', title: 'عنوان رئيسي', highlightedText: 'نص مميز', subtitle: 'سطر توضيحي مختصر.' };
+    case 'text': return { title: 'عنوان بلوك', paragraph: 'اكتب النص هنا.' };
+    case 'checklist': return { title: 'عنوان قائمة', items: [{ text: 'نقطة أولى' }, { text: 'نقطة ثانية' }, { text: 'نقطة ثالثة' }] };
+    case 'stat': return { title: 'رقم مهم', value: '70%', label: 'وصف مختصر للرقم', supportingText: 'تفصيل بسيط.' };
+    case 'image-text': return { imageUrl: '', title: 'عنوان مع صورة', paragraph: 'اكتب الشرح هنا.', caption: 'ملاحظة صغيرة' };
+    case 'cta': return { title: 'دعوة للإجراء', message: 'اكتب الرسالة التسويقية هنا.', buttonText: 'اتخذ إجراء', subtext: 'شرح أو توضيح إضافي' };
+    default: return {};
   }
 }
 
@@ -713,6 +719,14 @@ function getSelectedBlockIndex() {
   return slide?.blocks.findIndex(block => block.id === state.selectedBlockId) ?? -1;
 }
 
+function selectSlide(slideId) {
+  const slide = state.project.slides.find(item => item.id === slideId);
+  if (!slide) return;
+  state.selectedSlideId = slide.id;
+  state.selectedBlockId = slide.blocks[0]?.id || null;
+  render();
+}
+
 function loadProject() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -724,7 +738,9 @@ function loadProject() {
 
 function saveProject() {
   localStorage.setItem(STORAGE_KEY, serializeProject());
-  alert('تم الحفظ محليًا.');
+  state.autosaveState = 'Saved';
+  render();
+  showToast('تم الحفظ محليًا.');
 }
 
 function serializeProject() {
@@ -739,27 +755,29 @@ function downloadJson() {
   a.download = `${slugify(state.project.name || 'carousel-project')}.json`;
   a.click();
   URL.revokeObjectURL(url);
+  showToast('تم تنزيل JSON.');
 }
 
-function copyJson() {
-  navigator.clipboard.writeText(serializeProject())
-    .then(() => alert('تم نسخ JSON.'))
-    .catch(() => alert('تعذر النسخ من المتصفح الحالي.'));
+async function copyJson() {
+  try {
+    await navigator.clipboard.writeText(serializeProject());
+    showToast('تم نسخ JSON.');
+  } catch {
+    showToast('تعذر النسخ من المتصفح الحالي.');
+  }
 }
 
 function importJson() {
   try {
     const parsed = JSON.parse(refs.jsonEditor.value);
-    if (!parsed || !Array.isArray(parsed.slides)) {
-      throw new Error('الصيغة غير صحيحة: slides مفقودة.');
-    }
-    state.project = parsed;
+    const importedProject = parseImportedData(parsed);
+    normalizeProject(importedProject);
+    state.project = importedProject;
     state.selectedSlideId = state.project.slides[0]?.id || null;
     state.selectedBlockId = state.project.slides[0]?.blocks?.[0]?.id || null;
-    touch();
-    alert('تم استيراد المشروع بنجاح.');
+    touch('تم استيراد المشروع بنجاح.');
   } catch (error) {
-    alert(error.message || 'JSON غير صالح.');
+    showToast(error.message || 'JSON غير صالح.');
   }
 }
 
@@ -768,7 +786,7 @@ function resetDemo() {
   state.project = structuredClone(demoProject);
   state.selectedSlideId = state.project.slides[0]?.id || null;
   state.selectedBlockId = state.project.slides[0]?.blocks?.[0]?.id || null;
-  touch();
+  touch('تم استرجاع الديمو.');
 }
 
 function setZoom(next) {
@@ -776,11 +794,166 @@ function setZoom(next) {
   render();
 }
 
-function touch() {
+function touch(message = 'Autosaved') {
   state.project.meta = state.project.meta || {};
   state.project.meta.updatedAt = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, serializeProject());
+  state.autosaveState = 'Autosaved';
   render();
+  if (message && message !== 'Autosaved') showToast(message);
+}
+
+function parseImportedData(parsed) {
+  if (Array.isArray(parsed)) {
+    return wrapSlidesAsProject(parsed);
+  }
+
+  if (parsed && Array.isArray(parsed.slides)) {
+    return parsed.name || parsed.brand || parsed.theme ? parsed : wrapSlidesAsProject(parsed.slides);
+  }
+
+  if (parsed && Array.isArray(parsed.blocks)) {
+    return wrapBlocksAsProject(parsed.blocks);
+  }
+
+  throw new Error('الصيغة غير صحيحة. المقبول: مشروع كامل أو slides أو blocks.');
+}
+
+function wrapSlidesAsProject(slides) {
+  return {
+    id: uid(),
+    name: 'Imported Slides Project',
+    description: 'تم إنشاؤه من slides فقط',
+    language: 'ar',
+    dialect: 'iraqi',
+    canvas: { width: 1080, height: 1350, ratio: '4:5' },
+    brand: {
+      brandName: 'Brand',
+      handle: '@brand',
+      labelText: 'Brand Vision',
+      footerText: '@brand',
+    },
+    theme: { preset: 'default', defaultMode: 'light', accent: '#ff6b4a' },
+    slides,
+    meta: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: '2.0.0', source: 'imported' }
+  };
+}
+
+function wrapBlocksAsProject(blocks) {
+  return wrapSlidesAsProject([
+    {
+      id: uid(),
+      role: 'custom',
+      layoutFamily: 'card',
+      background: { mode: 'light' },
+      blocks,
+    }
+  ]);
+}
+
+function normalizeProject(project) {
+  project.id ||= uid();
+  project.name ||= 'Untitled Carousel';
+  project.description ||= '';
+  project.language ||= 'ar';
+  project.dialect ||= 'iraqi';
+  project.canvas ||= { width: 1080, height: 1350, ratio: '4:5' };
+  project.brand ||= {};
+  project.brand.brandName ||= 'Brand';
+  project.brand.handle ||= '@brand';
+  project.brand.labelText ||= project.brand.brandName;
+  project.brand.footerText ||= project.brand.handle;
+  project.theme ||= {};
+  project.theme.preset ||= 'default';
+  project.theme.defaultMode ||= 'light';
+  project.theme.accent ||= '#ff6b4a';
+  project.meta ||= {};
+  project.meta.version ||= '2.0.0';
+  project.meta.source ||= 'manual';
+  project.meta.createdAt ||= new Date().toISOString();
+  project.meta.updatedAt ||= new Date().toISOString();
+  project.slides ||= [];
+
+  if (!project.slides.length) project.slides.push(createDefaultSlide(project.theme.defaultMode));
+
+  project.slides = project.slides.map(slide => {
+    slide.id ||= uid();
+    slide.role ||= 'custom';
+    slide.layoutFamily ||= 'card';
+    slide.background ||= { mode: project.theme.defaultMode };
+    slide.background.mode ||= project.theme.defaultMode;
+    slide.blocks ||= [{ id: uid(), type: 'text', content: getDefaultContentForType('text') }];
+    slide.blocks = slide.blocks.map(block => {
+      block.id ||= uid();
+      block.type ||= 'text';
+      block.content ||= getDefaultContentForType(block.type);
+      return block;
+    });
+    return slide;
+  });
+}
+
+function createDefaultSlide(mode = 'light') {
+  return {
+    id: uid(),
+    role: 'custom',
+    layoutFamily: 'card',
+    background: { mode },
+    blocks: [{ id: uid(), type: 'text', content: getDefaultContentForType('text') }]
+  };
+}
+
+function createEmptyProject() {
+  return {
+    id: uid(),
+    name: 'New Carousel Project',
+    description: '',
+    language: 'ar',
+    dialect: 'iraqi',
+    canvas: { width: 1080, height: 1350, ratio: '4:5' },
+    brand: {
+      brandName: 'My Brand',
+      handle: '@mybrand',
+      labelText: 'رؤية البراند',
+      footerText: '@mybrand',
+    },
+    theme: { preset: 'default', defaultMode: 'light', accent: '#ff6b4a' },
+    slides: [createDefaultSlide('light')],
+    meta: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: '2.0.0', source: 'manual' }
+  };
+}
+
+function buildPrompt(mode) {
+  const topic = document.getElementById('promptTopic').value.trim() || 'موضوع بدون عنوان';
+  const goal = document.getElementById('promptGoal').value.trim() || 'توعية + CTA';
+  const audience = document.getElementById('promptAudience').value.trim() || 'جمهور عام';
+  const tone = document.getElementById('promptTone').value;
+  const slideCount = Math.max(1, Number(document.getElementById('promptSlides').value || 5));
+
+  if (mode === 'blocks') {
+    return `أعطني JSON صالح فقط بدون أي شرح أو markdown.\n\nأريد بلوكات لشريحة واحدة داخل carousel.\n\nالموضوع: ${topic}\nالهدف: ${goal}\nالجمهور: ${audience}\nالنبرة: ${tone}\n\nأرجع Object واحد بهذه الصيغة فقط:\n{\n  "blocks": [\n    {\n      "type": "hero | text | checklist | stat | image-text | cta",\n      "content": {}\n    }\n  ]\n}\n\nالقواعد:\n- استخدم العربية.\n- لا تكتب أي تعليق خارج JSON.\n- إذا كان النوع checklist فليكن items مصفوفة objects بهذا الشكل: { "text": "..." }.\n- إذا كان النوع cta فأضف title و message و buttonText.\n- إذا كان النوع stat فأضف value و label.\n- اجعل النصوص قصيرة ومناسبة للكاروسيل.`;
+  }
+
+  return `أعطني JSON صالح فقط بدون أي شرح أو markdown.\n\nأريد Project JSON كامل لبناء carousel داخل engine.\n\nالموضوع: ${topic}\nالهدف: ${goal}\nالجمهور: ${audience}\nالنبرة: ${tone}\nعدد الشرائح: ${slideCount}\n\nأرجع Object واحد بهذه الصيغة العامة:\n{\n  "name": "...",\n  "description": "...",\n  "language": "ar",\n  "dialect": "iraqi",\n  "brand": {\n    "brandName": "FrameX",\n    "handle": "@framex",\n    "labelText": "رؤية FrameX",\n    "footerText": "@framex"\n  },\n  "theme": {\n    "preset": "framex-default",\n    "defaultMode": "light",\n    "accent": "#ff6b4a"\n  },\n  "slides": [\n    {\n      "role": "cover | intro | problem | solution | proof | cta | summary | custom",\n      "layoutFamily": "centered | card | stack | top-image | dark | premium | minimal",\n      "background": {\n        "mode": "light | dark | image | custom",\n        "imageUrl": "",\n        "customColor": ""\n      },\n      "blocks": [\n        { "type": "hero", "content": { "eyebrow": "", "title": "", "highlightedText": "", "subtitle": "" } }\n      ]\n    }\n  ]\n}\n\nالقواعد:\n- لا تكتب أي شيء خارج JSON.\n- استخدم ${slideCount} شرائح تقريبًا.\n- اجعل flow منطقي: hook ثم problem ثم solution ثم CTA إن كان مناسبًا.\n- استخدم فقط الأنواع المدعومة: hero, text, checklist, stat, image-text, cta.\n- إذا استخدمت checklist فليكن items مصفوفة objects بهذا الشكل: { "text": "..." }.\n- اجعل النصوص قصيرة وقابلة للعرض داخل شريحة 1080x1350.`;
+}
+
+function activateTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+  document.querySelector(`.tab-btn[data-tab="${tabName}"]`)?.classList.add('active');
+  document.getElementById(`tab-${tabName}`)?.classList.add('active');
+}
+
+function showToast(message) {
+  refs.toast.textContent = message;
+  refs.toast.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => refs.toast.classList.remove('show'), 1800);
+}
+
+function setFieldValue(id, value) {
+  const field = document.getElementById(id);
+  if (field && field.value !== value) field.value = value;
 }
 
 function uid() {
@@ -792,7 +965,11 @@ function swap(arr, a, b) {
 }
 
 function slugify(text) {
-  return text.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9\-_\u0600-\u06FF]/g, '');
+  return String(text || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\-_\u0600-\u06FF]/g, '');
 }
 
 function getValueByPath(obj, path) {

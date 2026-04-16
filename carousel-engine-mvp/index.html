@@ -17,7 +17,7 @@
           <p class="eyebrow">Carousel Builder</p>
           <h1>محرك الشرائح بالبلوكات</h1>
         </div>
-        <p class="subtle">بدون API — انسخ المحتوى من ChatGPT والصقه هنا كـ JSON أو عدّله يدويًا.</p>
+        <p class="subtle">نسخة بدون API — خذ JSON من ChatGPT أو اكتب المحتوى يدويًا وعدّل بسرعة.</p>
       </div>
 
       <div class="tabs">
@@ -25,6 +25,7 @@
         <button class="tab-btn" data-tab="slides">الشرائح</button>
         <button class="tab-btn" data-tab="blocks">البلوكات</button>
         <button class="tab-btn" data-tab="json">JSON</button>
+        <button class="tab-btn" data-tab="prompts">Prompts</button>
       </div>
 
       <div class="tab-panels">
@@ -33,6 +34,9 @@
             <h2>بيانات المشروع</h2>
             <label>اسم المشروع
               <input id="projectName" type="text" />
+            </label>
+            <label>الوصف
+              <textarea id="projectDescription" rows="3"></textarea>
             </label>
             <label>اسم البراند
               <input id="brandName" type="text" />
@@ -46,7 +50,7 @@
             <label>لون الـ Accent
               <input id="accentColor" type="color" />
             </label>
-            <label>وضع الخلفية الافتراضي
+            <label>الوضع الافتراضي
               <select id="themeMode">
                 <option value="light">فاتح</option>
                 <option value="dark">غامق</option>
@@ -58,20 +62,23 @@
             <h2>إجراءات سريعة</h2>
             <div class="button-grid two">
               <button id="addSlideBtn" class="primary">إضافة شريحة</button>
+              <button id="newProjectBtn">مشروع فارغ</button>
               <button id="resetDemoBtn">استرجاع الديمو</button>
               <button id="saveLocalBtn">حفظ محلي</button>
               <button id="downloadJsonBtn">تحميل JSON</button>
+              <button id="loadCurrentJsonBtn">إظهار JSON الحالي</button>
             </div>
-            <p class="hint">الحفظ المحلي يستخدم localStorage في المتصفح.</p>
+            <p class="hint">الحفظ المحلي يستخدم localStorage في المتصفح، والتصدير الحالي بصيغة JSON فقط.</p>
           </div>
 
           <div class="panel-card">
-            <h2>كيف تستخدمه مع ChatGPT؟</h2>
+            <h2>طريقة العمل مع ChatGPT</h2>
             <ol class="hint-list">
-              <li>اطلب من ChatGPT يولد لك Project JSON أو blocks فقط.</li>
-              <li>انسخ الناتج والصقه في تبويب JSON.</li>
-              <li>اضغط <strong>استيراد JSON</strong>.</li>
-              <li>عدّل أي شريحة أو بلوك يدويًا من التبويبات.</li>
+              <li>اذهب إلى تبويب <strong>Prompts</strong>.</li>
+              <li>اكتب الموضوع والهدف والجمهور وعدد الشرائح.</li>
+              <li>انسخ الـ prompt الجاهز إلى ChatGPT.</li>
+              <li>الصق JSON الناتج في تبويب <strong>JSON</strong>.</li>
+              <li>اضغط <strong>استيراد JSON</strong> وعدّل يدويًا.</li>
             </ol>
           </div>
         </section>
@@ -180,9 +187,47 @@
             <div class="button-grid two">
               <button id="importJsonBtn" class="primary">استيراد JSON</button>
               <button id="copyJsonBtn">نسخ JSON</button>
-              <button id="loadCurrentJsonBtn">تحميل الحالي داخل الحقل</button>
             </div>
-            <p class="hint">الصيغة المطلوبة موجودة في ملف <strong>sample-project.json</strong>.</p>
+            <p class="hint">الاستيراد يقبل الآن 3 صيغ: مشروع كامل، أو { slides: [...] }، أو { blocks: [...] } لتكوين شريحة واحدة تلقائيًا.</p>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-prompts">
+          <div class="panel-card">
+            <h2>مولّد Prompts لـ ChatGPT</h2>
+            <label>الموضوع
+              <input id="promptTopic" type="text" placeholder="مثال: ليش إعلانك ما يبيع؟" />
+            </label>
+            <label>الهدف
+              <input id="promptGoal" type="text" placeholder="مثال: توعية + CTA" />
+            </label>
+            <label>الجمهور
+              <input id="promptAudience" type="text" placeholder="مثال: أصحاب المشاريع الصغيرة" />
+            </label>
+            <label>النبرة
+              <select id="promptTone">
+                <option value="iraqi">iraqi</option>
+                <option value="sales">sales</option>
+                <option value="friendly">friendly</option>
+                <option value="premium">premium</option>
+                <option value="educational">educational</option>
+              </select>
+            </label>
+            <label>عدد الشرائح
+              <input id="promptSlides" type="number" min="1" max="12" value="5" />
+            </label>
+            <div class="button-grid two">
+              <button id="buildProjectPromptBtn" class="primary">بناء Prompt لمشروع كامل</button>
+              <button id="buildBlocksPromptBtn">بناء Prompt لبلوكات فقط</button>
+              <button id="copyPromptBtn">نسخ Prompt</button>
+              <button id="sendPromptToJsonBtn">إرسال للـ JSON</button>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <h2>الناتج</h2>
+            <textarea id="promptOutput" class="json-editor" spellcheck="false"></textarea>
+            <p class="hint">هذا فقط prompt نصي ترسله إلى ChatGPT، وليس استدعاء API.</p>
           </div>
         </section>
       </div>
@@ -195,6 +240,7 @@
           <span class="subtle" id="workspaceMeta">0 شرائح</span>
         </div>
         <div class="toolbar-actions">
+          <span class="autosave-state" id="autosaveState">Autosaved</span>
           <button id="zoomOutBtn">-</button>
           <span id="zoomLabel">45%</span>
           <button id="zoomInBtn">+</button>
@@ -225,6 +271,7 @@
     </button>
   </template>
 
+  <div class="toast" id="toast"></div>
   <script src="app.js"></script>
 </body>
 </html>
